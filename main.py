@@ -62,7 +62,7 @@ while menuStatus:
             pygame.draw.rect(screen, colourLightGray, buttonGarage, border_radius = 10)
         else:
             pygame.draw.rect(screen, colourGray, buttonGarage, border_radius=10)
-        textGarage = fontButton.render("Garage", True, colourWhite)
+        textGarage = fontButton.render("GARAGE", True, colourWhite)
         screen.blit(textGarage, textGarage.get_rect(center=buttonGarage.center))
 
         if buttonEnd.collidepoint(mouse_pos):
