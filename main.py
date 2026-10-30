@@ -1,5 +1,5 @@
-﻿
-import pygame
+﻿import pygame
+import game
 
 pygame.init()
 
@@ -21,22 +21,22 @@ buttonEnd = pygame.Rect(300, 340, 200, 60)
 
 state = "MENU"
 
-game = True
+menuStatus = True
 
 time = pygame.time.Clock()
 fps = 60
 
-while game:
+while menuStatus:
     mouse_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            game = False
+            menuStatus = False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if state == "MENU":
                 if buttonPlay.collidepoint(mouse_pos):
                     state = "PLAY"
                 elif buttonEnd.collidepoint(mouse_pos):
-                    game = False
+                    menuStatus = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and state == "PLAY":
                 state = "MENU"
@@ -64,9 +64,7 @@ while game:
         screen.blit(textQuit, textQuit.get_rect(center=buttonEnd.center))
 
     elif state == "PLAY":
-        screen.fill((20, 50, 80))
-        info = fontButton.render("G", True, colourWhite)
-        screen.blit(info, info.get_rect(center=(width // 2, height // 2)))
+        state = game.run(screen, fps, time)
 
     pygame.display.flip()
     time.tick(fps)
