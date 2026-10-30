@@ -56,7 +56,13 @@ def run(screen, fps, time):
     testformule = Formule(False, "GOAT", 375, 275, colourRed, 100 , 100 , 100, 100, 100, "soft")
 
     speed = 1
+    angle = 3
     font = pygame.font.SysFont("Arial", 24)
+
+    track = pygame.Rect(50, 50, 700, 500)
+    inner_grass = pygame.Rect(180, 180, 440, 240)
+    line = pygame.Rect(400, 420, 10, 130)
+
 
     gameStatus = True
     while gameStatus:
@@ -68,18 +74,25 @@ def run(screen, fps, time):
                 if event.key == pygame.K_ESCAPE:
                     return "MENU"
         key = pygame.key.get_pressed()
-        if testformule.speed != speed:
+        if testformule.speed != 0:
             if key[pygame.K_a]:
-                testformule.angle -= 2
+                testformule.angle -= angle
             if key[pygame.K_d]:
-                testformule.angle += 2
-        if key[pygame.K_w]:
-            testformule.speed += speed
-        if key[pygame.K_s]:
-            testformule.speed -= speed
+                testformule.angle += angle
+        if testformule.speed + speed <= 5:
+            if key[pygame.K_w]:
+                testformule.speed += speed
+        if testformule.speed - speed >= -5:
+            if key[pygame.K_s]:
+                testformule.speed -= speed
 
         testformule.move(screen)
         screen.fill(colourGrass)
+        pygame.draw.rect(screen, colourPath, track)
+        pygame.draw.rect(screen, colourWhite, track, width=4, border_radius=80)
+        pygame.draw.rect(screen, colourGrass, inner_grass, border_radius=40)
+        pygame.draw.rect(screen, colourWhite, inner_grass, width=4, border_radius=40)
+        pygame.draw.rect(screen, colourWhite, line)
         testformule.render(screen)
         pygame.display.flip()
         time.tick(fps)
