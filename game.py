@@ -1,24 +1,62 @@
 ﻿import pygame
+import math
 
+class Formule:
+    def __init__(self, ai, name, x, y, colour, engine, transmission, steering, brakes, weight, tires):
+        self.ai = ai
+        self.name = name
+        self.x = x
+        self.y = y
+        self.colour = colour
+        self.engine = engine
+        self.transmission = transmission
+        self.steering = steering
+        self.brakes = brakes
+        self.weight = weight
+        self.tires = tires
+
+        self.body_status = 100
+        self.engine_status = 100
+        self.transmission_status = 100
+        self.steering_status = 100
+        self.tire_status = 100
+        self.brakes_status = 100
+
+        self.angle = 0
+        self.speed = 0
+        self.distance = 0
+    def move(self):
+        rad = math.radians(self.angle)
+        self.x += math.cos(rad) * self.speed
+        self.y += math.sin(rad) * self.speed
+    def render(self, screen):
+        shape = pygame.Surface((40, 20), pygame.SRCALPHA)
+
+        pygame.draw.rect(shape, self.colour, (0, 3, 40, 14), border_radius=4)
+        pygame.draw.rect(shape, (0, 0, 0), (5, 0, 8, 20))
+        pygame.draw.rect(shape, (0, 0, 0), (28, 0, 8, 20))
+
+        turned_formule = pygame.transform.rotate(shape, self.angle)
+        pos = turned_formule.get_rect(center=(self.x, self.y))
+
+        screen.blit(turned_formule, pos)
 def run(screen, fps, time):
     width, height = screen.get_size()
 
     colourBlack = (0, 0, 0)
-    colourGray = (80, 80, 80)
+    colourPath = (80, 80, 80)
+    colourGrass = (0, 153, 0)
     colourRed = (255, 0, 0)
     colourLightGray = (130, 130, 130)
     colourWhite = (255, 255, 255)
 
+    testformule = Formule(False, "GOAT", 375, 275, colourRed, 100 , 100 , 100, 100, 100, "soft")
 
-    playerX = 375
-    playerY = 275
-
-    speed = 5
+    speed = 1
     font = pygame.font.SysFont("Arial", 24)
 
     gameStatus = True
     while gameStatus:
-        player = pygame.Rect(playerX, playerY, 50, 50)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "QUIT"
@@ -27,16 +65,18 @@ def run(screen, fps, time):
                 if event.key == pygame.K_ESCAPE:
                     return "MENU"
         key = pygame.key.get_pressed()
-        if key[pygame.K_a]:
-            playerX -= speed
-        if key[pygame.K_d]:
-            playerX += speed
+        if testformule.speed != speed:
+            if key[pygame.K_a]:
+                testformule.angle -= 2
+            if key[pygame.K_d]:
+                testformule.angle += 2
         if key[pygame.K_w]:
-            playerY -= speed
+            testformule.speed += speed
         if key[pygame.K_s]:
-            playerY += speed
+            testformule.speed -= speed
 
-        screen.fill(colourBlack)
-        pygame.draw.rect(screen, colourRed, player)
+        testformule.move()
+        screen.fill(colourGrass)
+        testformule.render(screen)
         pygame.display.flip()
         time.tick(fps)
