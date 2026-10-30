@@ -22,13 +22,16 @@ class Formule:
         self.tire_status = 100
         self.brakes_status = 100
 
-        self.angle = 0
+        self.angle = 180
         self.speed = 0
         self.distance = 0
-    def move(self):
+    def move(self, screen):
         rad = math.radians(self.angle)
         self.x += math.cos(rad) * self.speed
         self.y += math.sin(rad) * self.speed
+
+        self.x = pygame.math.clamp(self.x, 20, screen.width - 20)
+        self.y = pygame.math.clamp(self.y, 20, screen.height - 20)
     def render(self, screen):
         shape = pygame.Surface((40, 20), pygame.SRCALPHA)
 
@@ -36,7 +39,7 @@ class Formule:
         pygame.draw.rect(shape, (0, 0, 0), (5, 0, 8, 20))
         pygame.draw.rect(shape, (0, 0, 0), (28, 0, 8, 20))
 
-        turned_formule = pygame.transform.rotate(shape, self.angle)
+        turned_formule = pygame.transform.rotate(shape, -self.angle)
         pos = turned_formule.get_rect(center=(self.x, self.y))
 
         screen.blit(turned_formule, pos)
@@ -75,7 +78,7 @@ def run(screen, fps, time):
         if key[pygame.K_s]:
             testformule.speed -= speed
 
-        testformule.move()
+        testformule.move(screen)
         screen.fill(colourGrass)
         testformule.render(screen)
         pygame.display.flip()
