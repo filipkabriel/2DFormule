@@ -17,7 +17,8 @@ fontButton = pygame.font.SysFont("Arial", 36)
 fontTitle = pygame.font.SysFont("Arial", 80)
 
 buttonPlay = pygame.Rect(300, 250, 200, 60)
-buttonEnd = pygame.Rect(300, 340, 200, 60)
+buttonGarage = pygame.Rect(300, 340, 200, 60)
+buttonEnd = pygame.Rect(300, 430, 200, 60)
 
 state = "MENU"
 
@@ -36,6 +37,8 @@ while menuStatus:
                 if buttonPlay.collidepoint(mouse_pos):
                     state = "PLAY"
                 elif buttonEnd.collidepoint(mouse_pos):
+                    state = "GARAGE"
+                elif buttonEnd.collidepoint(mouse_pos):
                     menuStatus = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and state == "PLAY":
@@ -52,15 +55,21 @@ while menuStatus:
             pygame.draw.rect(screen, colourLightGray, buttonPlay, border_radius = 10)
         else:
             pygame.draw.rect(screen, colourGray, buttonPlay, border_radius=10)
-
         textGame = fontButton.render("PLAY", True, colourWhite)
         screen.blit(textGame, textGame.get_rect(center=buttonPlay.center))
+
+        if buttonGarage.collidepoint(mouse_pos):
+            pygame.draw.rect(screen, colourLightGray, buttonGarage, border_radius = 10)
+        else:
+            pygame.draw.rect(screen, colourGray, buttonGarage, border_radius=10)
+        textGarage = fontButton.render("Garage", True, colourWhite)
+        screen.blit(textGarage, textGarage.get_rect(center=buttonGarage.center))
+
         if buttonEnd.collidepoint(mouse_pos):
             pygame.draw.rect(screen, colourLightGray, buttonEnd, border_radius=10)
         else:
             pygame.draw.rect(screen, colourGray, buttonEnd, border_radius=10)
-
-        textQuit = (fontButton.render("QUIT", True, colourWhite))
+        textQuit = fontButton.render("QUIT", True, colourWhite)
         screen.blit(textQuit, textQuit.get_rect(center=buttonEnd.center))
 
     elif state == "PLAY":
