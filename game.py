@@ -32,6 +32,13 @@ class Formule:
 
         self.x = pygame.math.clamp(self.x, 20, screen.width - 20)
         self.y = pygame.math.clamp(self.y, 20, screen.height - 20)
+
+        pos_pixel = (int(self.x), int(self.y))
+        detected_colour = screen.get_at(pos_pixel)[:3]
+
+        if detected_colour == (0, 153, 0):
+            self.speed *= 0.5
+            self.tire_status -= 0.05
     def render(self, screen):
         shape = pygame.Surface((40, 20), pygame.SRCALPHA)
 
@@ -85,13 +92,14 @@ def run(screen, fps, time):
             if key[pygame.K_s]:
                 testformule.speed -= speed
 
-        testformule.move(screen)
+
         screen.fill(colourGrass)
         pygame.draw.rect(screen, colourPath, track)
         pygame.draw.rect(screen, colourWhite, track, width=4, border_radius=80)
         pygame.draw.rect(screen, colourGrass, inner_grass, border_radius=40)
         pygame.draw.rect(screen, colourWhite, inner_grass, width=4, border_radius=40)
         pygame.draw.rect(screen, colourWhite, line)
+        testformule.move(screen)
         testformule.render(screen)
         hud(screen, testformule)
         pygame.display.flip()
