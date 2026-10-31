@@ -1,6 +1,5 @@
 ﻿import pygame
 import math
-
 class Formule:
     def __init__(self, ai, name, x, y, colour, engine, transmission, steering, brakes, weight, tires):
         self.ai = ai
@@ -15,6 +14,7 @@ class Formule:
         self.weight = weight
         self.tires = tires
 
+        self.dnf_status = False
         self.body_status = 100
         self.engine_status = 100
         self.transmission_status = 100
@@ -57,7 +57,6 @@ def run(screen, fps, time):
 
     speed = 1
     angle = 3
-    font = pygame.font.SysFont("Arial", 24)
 
     track = pygame.Rect(50, 50, 700, 500)
     inner_grass = pygame.Rect(180, 180, 440, 240)
@@ -94,5 +93,10 @@ def run(screen, fps, time):
         pygame.draw.rect(screen, colourWhite, inner_grass, width=4, border_radius=40)
         pygame.draw.rect(screen, colourWhite, line)
         testformule.render(screen)
+        hud(screen, testformule)
         pygame.display.flip()
         time.tick(fps)
+def hud(screen, player):
+    font = pygame.font.SysFont("Arial", 36)
+    text_speed = font.render(str(player.speed) + " Km/h", 1, (255, 255, 255))
+    screen.blit(text_speed, (20, 20))
