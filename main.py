@@ -137,7 +137,7 @@ while menuStatus:
         title_surf = fontTitle.render("2D Formule", True, colourWhite)
         screen.blit(title_surf, title_surf.get_rect(center=(width // 2, 150)))
 
-        draw_button(buttonPlay, "PLAY", mouse_pos)
+        draw_button(buttonPlay,  "PLAY", mouse_pos)
         draw_button(buttonGarage, "GARAGE", mouse_pos)
         draw_button(buttonEnd, "QUIT", mouse_pos)
     elif state == "PLAY":
