@@ -147,6 +147,13 @@ def run(screen, fps, time, formule):
         formule["tires"]
     )
 
+    race_started = False
+    start_ticks = 0
+    elapsed_time = 0.0
+
+    font_hud = pygame.font.SysFont("Arial", 32)
+    font_big = pygame.font.SysFont("Arial", 64, bold=True)
+
     cam_size = 900
     camera_view = pygame.Surface((cam_size, cam_size))
 
@@ -159,9 +166,18 @@ def run(screen, fps, time, formule):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "MENU"
-        key = pygame.key.get_pressed()
-        formule.control(key)
-        formule.move(screen, world_map)
+
+                if event.key == pygame.K_SPACE and not race_started:
+                    race_started = True
+                    start_ticks = pygame.time.get_ticks()
+
+            if race_started:
+                key = pygame.key.get_pressed()
+                formule.control(key)
+                formule.move(screen, world_map)
+
+                if not formule.dnf_status:
+                    elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
 
         camera_view.fill(colourGrass)
 
@@ -177,16 +193,29 @@ def run(screen, fps, time, formule):
         screen.blit(rotated_world, world_rect)
 
         formule.render(screen)
-        hud(screen, formule)
+        hud(screen, formule, elapsed_time, font_hud)
 
+        if not race_started:
+            start_text = font_big.render("STISKNI MEZERNIK PRO START", True, (255, 255, 0))
+            start_rect = start_text.get_rect(center=(screen_w // 2, screen_h // 2 - 120))
+
+            pygame.draw.rect(screen, (0, 0, 0), start_rect.inflate(40, 20), border_radius=10)
+            screen.blit(start_text, start_rect)
         pygame.display.flip()
         time.tick(fps)
-def hud(screen, player):
-    font = pygame.font.SysFont("Arial", 36)
+def hud(screen, player, elapsed_time, font_hud):
+    font_hud = pygame.font.SysFont("Arial", 36)
 
     kmh = int(abs(player.speed) * 45)
 
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+    hundredths = int((elapsed_time * 100) % 100)
+
+    time_string = f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
+
     stats = [
+        f"Time: {time_string}",
         f"Speed: {kmh} km/h",
         f"Tires ({player.tires}): {int(player.tire_status)} %",
         f"Brakes: {int(player.brakes_status)} %",
@@ -198,5 +227,5 @@ def hud(screen, player):
         stats.append("STAV: DNF (Zniceno!)")
 
     for i, radek in enumerate(stats):
-        text_surf = font.render(radek, True, (255, 255, 255))
+        text_surf = font_hud.render(radek, True, (255, 255, 255))
         screen.blit(text_surf, (20, 15 + i * 25))
