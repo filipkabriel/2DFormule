@@ -141,7 +141,9 @@ while menuStatus:
         draw_button(buttonGarage, "GARAGE", mouse_pos)
         draw_button(buttonEnd, "QUIT", mouse_pos)
     elif state == "PLAY":
-        state = game.run(screen, fps, time, car_stats)
+        state, reward = game.run(screen, fps, time, car_stats)
+        coins += reward
+
         if state == "QUIT":
             menuStatus = False
     elif state == "GARAGE":
