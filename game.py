@@ -123,9 +123,9 @@ def run(screen, fps, time, formule):
     map_w, map_h = 2400, 1600
     world_map = pygame.Surface((map_w, map_h))
 
-    track = pygame.Rect(50, 50, 1500, 800)
-    inner_grass = pygame.Rect(180, 180, 440, 240)
-    line = pygame.Rect(400, 420, 10, 130)
+    track = pygame.Rect(200, 200, 2000, 1200)
+    inner_grass = pygame.Rect(450, 450, 1500, 700)
+    line = pygame.Rect(1100, 1150, 20, 250)
 
     world_map.fill(colourGrass)
     pygame.draw.rect(world_map, colourPath, track, border_radius=120)
