@@ -108,7 +108,7 @@ class Formule:
         pos = turned_formule.get_rect(center=(self.x, self.y))
 
         screen.blit(turned_formule, pos)
-def run(screen, fps, time):
+def run(screen, fps, time, formule):
 
     colourBlack = (0, 0, 0)
     colourPath = (80, 80, 80)
@@ -117,11 +117,22 @@ def run(screen, fps, time):
     colourLightGray = (130, 130, 130)
     colourWhite = (255, 255, 255)
 
-    testformule = Formule(False, "GOAT", 375, 275, colourRed, 100 , 100 , 100, 100, 100, "soft")
-
     track = pygame.Rect(50, 50, 1500, 800)
     inner_grass = pygame.Rect(180, 180, 440, 240)
     line = pygame.Rect(400, 420, 10, 130)
+
+    formule = Formule(
+        formule["ai"],
+        formule["name"],
+        430, 485,
+        formule["colour"],
+        formule["engine"],
+        formule["transmission"],
+        formule["steering"],
+        formule["brakes"],
+        formule["weight"],
+        formule["tires"]
+    )
 
     gameStatus = True
     while gameStatus:
@@ -133,7 +144,7 @@ def run(screen, fps, time):
                 if event.key == pygame.K_ESCAPE:
                     return "MENU"
         key = pygame.key.get_pressed()
-        testformule.control(key)
+        formule.control(key)
 
         screen.fill(colourGrass)
         pygame.draw.rect(screen, colourPath, track)
@@ -141,9 +152,9 @@ def run(screen, fps, time):
         pygame.draw.rect(screen, colourGrass, inner_grass, border_radius=40)
         pygame.draw.rect(screen, colourWhite, inner_grass, width=4, border_radius=40)
         pygame.draw.rect(screen, colourWhite, line)
-        testformule.move(screen)
-        testformule.render(screen)
-        hud(screen, testformule)
+        formule.move(screen)
+        formule.render(screen)
+        hud(screen, formule)
         pygame.display.flip()
         time.tick(fps)
 def hud(screen, player):

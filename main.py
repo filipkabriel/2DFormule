@@ -36,14 +36,20 @@ coins = 1000
 upgrade_cost = 200
 tires_list = ["soft", "medium", "hard"]
 tire_index = 0
+formule_list = [{
+        "ai": False,
+        "name": "Formule 1",
+        "colour": colourRed,
+        "engine": 60,
+        "transmission": 60,
+        "steering": 60,
+        "brakes": 60,
+        "weight": 700,
+        "tires": tires_list[tire_index]
+    }]
+formule_index = 0
 
-car_stats = {
-    "engine": 100,
-    "transmission": 100,
-    "steering": 100,
-    "brakes": 100,
-    "tires": tires_list[tire_index]
-}
+car_stats = formule_list[formule_index]
 
 def draw_button(rect, text, mouse_pos):
     colour = colourLightGray if rect.collidepoint(mouse_pos) else colourGray
@@ -105,7 +111,7 @@ while menuStatus:
         draw_button(buttonGarage, "GARAGE", mouse_pos)
         draw_button(buttonEnd, "QUIT", mouse_pos)
     elif state == "PLAY":
-        state = game.run(screen, fps, time)
+        state = game.run(screen, fps, time, car_stats)
         if state == "QUIT":
             menuStatus = False
     elif state == "GARAGE":
