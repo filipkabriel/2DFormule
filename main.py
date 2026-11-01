@@ -1,5 +1,7 @@
 ﻿import pygame
 import game
+import json
+import os
 
 pygame.init()
 
@@ -57,9 +59,37 @@ def draw_button(rect, text, mouse_pos):
     text_surface = fontButton.render(text, True, colourWhite)
     screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
+SAVE_FILE = "save.json"
+def save_game(coins, formule_list):
+    data = {
+        "coins": coins,
+        "formule_list": formule_list
+    }
+    with open(SAVE_FILE, "w") as file:
+        json.dump(data, file, indent=4)
+def load_game():
+    if os.path.exists(SAVE_FILE):
+        with open(SAVE_FILE, "r") as file:
+            data = json.load(file)
+
+            for auto in data["formule_list"]:
+                auto["colour"] = tuple(auto["colour"])
+
+            return data["coins"], data["formule_list"]
+
+    return None, None
 time = pygame.time.Clock()
 fps = 60
 
+loaded_coins, loaded_formule = load_game()
+if loaded_coins is not None:
+    coins = loaded_coins
+    formule_list = loaded_formule
+
+formule_index = 0
+car_stats = formule_list[formule_index]
+
+tire_index = tires_list.index(car_stats["tires"])
 while menuStatus:
     mouse_pos = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -143,5 +173,7 @@ while menuStatus:
         draw_button(btnBack, "BACK", mouse_pos)
     pygame.display.flip()
     time.tick(fps)
+
+save_game(coins, formule_list)
 
 pygame.quit()

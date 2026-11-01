@@ -46,7 +46,7 @@ class Formule:
             if self.speed < max_speed:
                 self.speed += acc
             self.engine_status = max(0.0, self.engine_status - 0.0001)
-            self.transmission_status = max(0.0, self.transmission_status - 0.008)
+            self.transmission_status = max(0.0, self.transmission_status - 0.0002)
 
         elif key[pygame.K_s]:
             if self.speed > 0:
