@@ -37,9 +37,9 @@ class Formule:
         ef_tires = max(0.3, self.tire_status / 100.0)
         ef_steering = max(0.3, self.steering_status / 100.0)
 
-        max_speed = (self.engine / 15.0) * ef_engine
+        max_speed = (self.engine / 5.0) * ef_engine
         acc = (self.transmission / 1000.0) * ef_transmission
-        brake_power = (self.brakes / 1000.0) * ef_brakes
+        brake_power = (self.brakes / 1300.0) * ef_brakes
         steer_speed = (self.steering / 30.0) * ef_steering * ef_tires
 
         if key[pygame.K_w]:
@@ -109,7 +109,6 @@ class Formule:
 
         screen.blit(turned_formule, pos)
 def run(screen, fps, time):
-    width, height = screen.get_size()
 
     colourBlack = (0, 0, 0)
     colourPath = (80, 80, 80)
@@ -120,13 +119,9 @@ def run(screen, fps, time):
 
     testformule = Formule(False, "GOAT", 375, 275, colourRed, 100 , 100 , 100, 100, 100, "soft")
 
-    speed = 1
-    angle = 3
-
-    track = pygame.Rect(50, 50, 700, 500)
+    track = pygame.Rect(50, 50, 1500, 800)
     inner_grass = pygame.Rect(180, 180, 440, 240)
     line = pygame.Rect(400, 420, 10, 130)
-
 
     gameStatus = True
     while gameStatus:
@@ -139,7 +134,6 @@ def run(screen, fps, time):
                     return "MENU"
         key = pygame.key.get_pressed()
         testformule.control(key)
-
 
         screen.fill(colourGrass)
         pygame.draw.rect(screen, colourPath, track)

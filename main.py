@@ -3,7 +3,7 @@ import game
 
 pygame.init()
 
-width, height  = 800, 600
+width, height  = 1600,900
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("2D Formule")
 
@@ -12,17 +12,44 @@ colourGray = (80, 80, 80)
 colourRed = (255, 0, 0)
 colourLightGray = (130, 130, 130)
 colourWhite = (255, 255, 255)
+colourYellow = (255, 255, 0)
 
 fontButton = pygame.font.SysFont("Arial", 36)
 fontTitle = pygame.font.SysFont("Arial", 80)
 
-buttonPlay = pygame.Rect(300, 250, 200, 60)
-buttonGarage = pygame.Rect(300, 340, 200, 60)
-buttonEnd = pygame.Rect(300, 430, 200, 60)
+buttonPlay = pygame.Rect(700, 300, 200, 60)
+buttonGarage = pygame.Rect(700, 400, 200, 60)
+buttonEnd = pygame.Rect(700, 500, 200, 60)
+
+btnBuyEngine = pygame.Rect(950, 250, 180, 50)
+btnBuyTrans = pygame.Rect(950, 330, 180, 50)
+btnBuySteer = pygame.Rect(950, 410, 180, 50)
+btnBuyBrakes = pygame.Rect(950, 490, 180, 50)
+btnChangeTires = pygame.Rect(950, 570, 180, 50)
+btnBack = pygame.Rect(700, 750, 200, 60)
 
 state = "MENU"
 
 menuStatus = True
+
+coins = 1000
+upgrade_cost = 200
+tires_list = ["soft", "medium", "hard"]
+tire_index = 0
+
+car_stats = {
+    "engine": 100,
+    "transmission": 100,
+    "steering": 100,
+    "brakes": 100,
+    "tires": tires_list[tire_index]
+}
+
+def draw_button(rect, text, mouse_pos):
+    colour = colourLightGray if rect.collidepoint(mouse_pos) else colourGray
+    pygame.draw.rect(screen, colour, rect, border_radius = 10)
+    text_surface = fontButton.render(text, True, colourWhite)
+    screen.blit(text_surface, text_surface.get_rect(center=rect.center))
 
 time = pygame.time.Clock()
 fps = 60
@@ -36,45 +63,78 @@ while menuStatus:
             if state == "MENU":
                 if buttonPlay.collidepoint(mouse_pos):
                     state = "PLAY"
-                elif buttonEnd.collidepoint(mouse_pos):
+                elif buttonGarage.collidepoint(mouse_pos):
                     state = "GARAGE"
                 elif buttonEnd.collidepoint(mouse_pos):
                     menuStatus = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and state == "PLAY":
-                state = "MENU"
+            elif state == "GARAGE":
+                if btnBack.collidepoint(mouse_pos):
+                    state = "MENU"
+                    if state == "QUIT":
+                        menuStatus = False
 
+                elif btnBuyEngine.collidepoint(mouse_pos) and coins >= upgrade_cost:
+                    coins -= upgrade_cost
+                    car_stats["engine"] += 10
+
+                elif btnBuyTrans.collidepoint(mouse_pos) and coins >= upgrade_cost:
+                    coins -= upgrade_cost
+                    car_stats["transmission"] += 10
+
+                elif btnBuySteer.collidepoint(mouse_pos) and coins >= upgrade_cost:
+                    coins -= upgrade_cost
+                    car_stats["steering"] += 10
+
+                elif btnBuyBrakes.collidepoint(mouse_pos) and coins >= upgrade_cost:
+                    coins -= upgrade_cost
+                    car_stats["brakes"] += 10
+
+                elif btnChangeTires.collidepoint(mouse_pos):
+                    tire_index = (tire_index + 1) % len(tires_list)
+                    car_stats["tires"] = tires_list[tire_index]
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE and state == "GARAGE":
+                state = "MENU"
     if state == "MENU":
         screen.fill(colourBlack)
 
         title_surf = fontTitle.render("2D Formule", True, colourWhite)
-        title_rect = title_surf.get_rect(center=(width // 2, 130))
-        screen.blit(title_surf, title_rect)
+        screen.blit(title_surf, title_surf.get_rect(center=(width // 2, 150)))
 
-        if buttonPlay.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, colourLightGray, buttonPlay, border_radius = 10)
-        else:
-            pygame.draw.rect(screen, colourGray, buttonPlay, border_radius=10)
-        textGame = fontButton.render("PLAY", True, colourWhite)
-        screen.blit(textGame, textGame.get_rect(center=buttonPlay.center))
-
-        if buttonGarage.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, colourLightGray, buttonGarage, border_radius = 10)
-        else:
-            pygame.draw.rect(screen, colourGray, buttonGarage, border_radius=10)
-        textGarage = fontButton.render("GARAGE", True, colourWhite)
-        screen.blit(textGarage, textGarage.get_rect(center=buttonGarage.center))
-
-        if buttonEnd.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, colourLightGray, buttonEnd, border_radius=10)
-        else:
-            pygame.draw.rect(screen, colourGray, buttonEnd, border_radius=10)
-        textQuit = fontButton.render("QUIT", True, colourWhite)
-        screen.blit(textQuit, textQuit.get_rect(center=buttonEnd.center))
-
+        draw_button(buttonPlay, "PLAY", mouse_pos)
+        draw_button(buttonGarage, "GARAGE", mouse_pos)
+        draw_button(buttonEnd, "QUIT", mouse_pos)
     elif state == "PLAY":
         state = game.run(screen, fps, time)
+        if state == "QUIT":
+            menuStatus = False
+    elif state == "GARAGE":
+        screen.fill((25, 25, 30))
 
+        title_surf = fontTitle.render("GARAGE", True, colourWhite)
+        screen.blit(title_surf, title_surf.get_rect(center=(width // 2, 100)))
+
+        coins_surf = fontButton.render(f"Coins: {coins}", True, colourYellow)
+        screen.blit(coins_surf, (width - 250, 50))
+
+        stats_texts = [
+            (f"Engine: {car_stats['engine']}", 260),
+            (f"Transmission: {car_stats['transmission']}", 340),
+            (f"Steering: {car_stats['steering']}", 420),
+            (f"Brakes: {car_stats['brakes']}", 500),
+            (f"Tires: {car_stats['tires'].upper()}", 580)
+        ]
+        for text, y_pos in stats_texts:
+            surf = fontButton.render(text, True, colourWhite)
+            screen.blit(surf, (450, y_pos))
+
+        draw_button(btnBuyEngine, f"+10 ({upgrade_cost}$)", mouse_pos)
+        draw_button(btnBuyTrans, f"+10 ({upgrade_cost}$)", mouse_pos)
+        draw_button(btnBuySteer, f"+10 ({upgrade_cost}$)", mouse_pos)
+        draw_button(btnBuyBrakes, f"+10 ({upgrade_cost}$)", mouse_pos)
+        draw_button(btnChangeTires, "CHANGE", mouse_pos)
+
+        draw_button(btnBack, "BACK", mouse_pos)
     pygame.display.flip()
     time.tick(fps)
 
