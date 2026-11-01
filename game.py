@@ -74,22 +74,24 @@ class Formule:
                 self.angle += steer_speed * ride_dir
                 self.tire_status = max(0.0, self.tire_status - 0.001 * abs(self.speed))
                 self.steering_status = max(0.0, self.steering_status - 0.002)
-    def move(self, screen):
+    def move(self, screen, world_map):
+        map_w, map_h = world_map.get_size()
+
         rad = math.radians(self.angle)
         self.x += math.cos(rad) * self.speed
         self.y += math.sin(rad) * self.speed
 
         self.distance += abs(self.speed)
 
-        if self.x < 20 or self.x > screen.width - 20 or self.y < 20 or self.y > screen.height - 20:
+        if self.x < 20 or self.x > map_w - 20 or self.y < 20 or self.y > map_h - 20:
             if abs(self.speed) > 1.5:
                 self.body_status = max(0.0, self.body_status - abs(self.speed) * 2)
             self.speed *= 0.5
-            self.x = pygame.math.clamp(self.x, 20, screen.width - 20)
-            self.y = pygame.math.clamp(self.y, 20, screen.height - 20)
+            self.x = pygame.math.clamp(self.x, 20, map_w - 20)
+            self.y = pygame.math.clamp(self.y, 20, map_h - 20)
 
         pos_pixel = (int(self.x), int(self.y))
-        detected_colour = screen.get_at(pos_pixel)[:3]
+        detected_colour = world_map.get_at(pos_pixel)[:3]
 
         if detected_colour == (0, 153, 0):
             self.speed *= 0.90
@@ -98,18 +100,19 @@ class Formule:
         if self.engine_status <= 0 or self.transmission_status <= 0 or self.body_status <= 0:
             self.dnf_status = True
     def render(self, screen):
-        shape = pygame.Surface((40, 20), pygame.SRCALPHA)
+        shape = pygame.Surface((20, 40), pygame.SRCALPHA)
 
-        pygame.draw.rect(shape, self.colour, (0, 3, 40, 14), border_radius=4)
-        pygame.draw.rect(shape, (0, 0, 0), (5, 0, 8, 20))
-        pygame.draw.rect(shape, (0, 0, 0), (28, 0, 8, 20))
+        pygame.draw.rect(shape, self.colour, (3, 0, 14, 40), border_radius=4)
+        pygame.draw.rect(shape, (0, 0, 0), (0, 5, 20, 8))
+        pygame.draw.rect(shape, (0, 0, 0), (0, 28, 20, 8))
 
-        turned_formule = pygame.transform.rotate(shape, -self.angle)
-        pos = turned_formule.get_rect(center=(self.x, self.y))
+        zoomed_car = pygame.transform.scale(shape, (40, 80))
 
-        screen.blit(turned_formule, pos)
+        screen_w, screen_h = screen.get_size()
+        pos = zoomed_car.get_rect(center=(screen_w // 2, screen_h // 2))
+        screen.blit(zoomed_car, pos)
 def run(screen, fps, time, formule):
-
+    screen_w, screen_h = screen.get_size()
     colourBlack = (0, 0, 0)
     colourPath = (80, 80, 80)
     colourGrass = (0, 153, 0)
@@ -117,9 +120,19 @@ def run(screen, fps, time, formule):
     colourLightGray = (130, 130, 130)
     colourWhite = (255, 255, 255)
 
+    map_w, map_h = 2400, 1600
+    world_map = pygame.Surface((map_w, map_h))
+
     track = pygame.Rect(50, 50, 1500, 800)
     inner_grass = pygame.Rect(180, 180, 440, 240)
     line = pygame.Rect(400, 420, 10, 130)
+
+    world_map.fill(colourGrass)
+    pygame.draw.rect(world_map, colourPath, track, border_radius=120)
+    pygame.draw.rect(world_map, colourWhite, track, width=6, border_radius=120)
+    pygame.draw.rect(world_map, colourGrass, inner_grass, border_radius=80)
+    pygame.draw.rect(world_map, colourWhite, inner_grass, width=6, border_radius=80)
+    pygame.draw.rect(world_map, colourWhite, line)
 
     formule = Formule(
         formule["ai"],
@@ -134,6 +147,9 @@ def run(screen, fps, time, formule):
         formule["tires"]
     )
 
+    cam_size = 900
+    camera_view = pygame.Surface((cam_size, cam_size))
+
     gameStatus = True
     while gameStatus:
         for event in pygame.event.get():
@@ -145,16 +161,24 @@ def run(screen, fps, time, formule):
                     return "MENU"
         key = pygame.key.get_pressed()
         formule.control(key)
+        formule.move(screen, world_map)
 
-        screen.fill(colourGrass)
-        pygame.draw.rect(screen, colourPath, track)
-        pygame.draw.rect(screen, colourWhite, track, width=4, border_radius=80)
-        pygame.draw.rect(screen, colourGrass, inner_grass, border_radius=40)
-        pygame.draw.rect(screen, colourWhite, inner_grass, width=4, border_radius=40)
-        pygame.draw.rect(screen, colourWhite, line)
-        formule.move(screen)
+        camera_view.fill(colourGrass)
+
+        offset_x = (cam_size // 2) - int(formule.x)
+        offset_y = (cam_size // 2) - int(formule.y)
+        camera_view.blit(world_map, (offset_x, offset_y))
+
+        zoomed_view = pygame.transform.scale(camera_view, (cam_size * 2, cam_size * 2))
+
+        rotated_world = pygame.transform.rotate(zoomed_view, formule.angle + 90)
+
+        world_rect = rotated_world.get_rect(center=(screen_w // 2, screen_h // 2))
+        screen.blit(rotated_world, world_rect)
+
         formule.render(screen)
         hud(screen, formule)
+
         pygame.display.flip()
         time.tick(fps)
 def hud(screen, player):
