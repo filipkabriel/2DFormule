@@ -171,13 +171,13 @@ def run(screen, fps, time, formule):
                     race_started = True
                     start_ticks = pygame.time.get_ticks()
 
-            if race_started:
-                key = pygame.key.get_pressed()
-                formule.control(key)
-                formule.move(screen, world_map)
+        if race_started:
+            key = pygame.key.get_pressed()
+            formule.control(key)
+            formule.move(screen, world_map)
 
-                if not formule.dnf_status:
-                    elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
+            if not formule.dnf_status:
+                elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
 
         camera_view.fill(colourGrass)
 
