@@ -175,7 +175,6 @@ while menuStatus:
         draw_button(btnBack, "BACK", mouse_pos)
     pygame.display.flip()
     time.tick(fps)
-
-save_game(coins, formule_list)
+    save_game(coins, formule_list)
 
 pygame.quit()
