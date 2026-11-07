@@ -4,11 +4,11 @@ import pygame
 import settings
 
 class Formule:
-    def __init__(self, ai, name, x, y, colour, engine, transmission, steering, brakes, weight, tires):
+    def __init__(self, ai, name, colour, engine, transmission, steering, brakes, weight, tires):
         self.ai = ai
         self.name = name
-        self.x = x
-        self.y = y
+        self.x = 0
+        self.y = 0
         self.colour = colour
         self.engine = engine
         self.transmission = transmission
