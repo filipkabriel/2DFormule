@@ -1,13 +1,13 @@
 ﻿import pygame
 import game
+import settings
 import json
 import os
 
 pygame.init()
 
-width, height  = 1600,900
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("2D Formule")
+screen = settings.setcreen()
+
 
 colourBlack = (0, 0, 0)
 colourGray = (80, 80, 80)
@@ -36,20 +36,7 @@ menuStatus = True
 
 coins = 1000
 upgrade_cost = 200
-tires_list = ["soft", "medium", "hard"]
-tire_index = 0
-formule_list = [{
-        "ai": False,
-        "name": "Formule 1",
-        "colour": colourRed,
-        "engine": 60,
-        "transmission": 60,
-        "steering": 60,
-        "brakes": 60,
-        "weight": 700,
-        "tires": tires_list[tire_index]
-    }]
-formule_index = 0
+
 
 car_stats = formule_list[formule_index]
 
