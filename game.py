@@ -1,10 +1,8 @@
 ﻿import pygame
 import math
-import player
 import settings
 
-def run(fps, time, formule):
-
+def create_map():
     map_w, map_h = 2400, 1600
     world_map = pygame.Surface((map_w, map_h))
 
@@ -20,8 +18,10 @@ def run(fps, time, formule):
     pygame.draw.rect(world_map, settings.colour.Green, inner_grass, border_radius=80)
     pygame.draw.rect(world_map, settings.colour.White, inner_grass, width=6, border_radius=80)
     pygame.draw.rect(world_map, settings.colour.White, line)
+    return world_map, line, checkpoint
 
-
+def run(player):
+    world_map, line, checkpoint = create_map()
 
     font_hud = pygame.font.SysFont("Arial", 32)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)
@@ -52,21 +52,21 @@ def run(fps, time, formule):
                 if event.key == pygame.K_SPACE and not race_started:
                     race_started = True
                     start_ticks = pygame.time.get_ticks()
-                elif race_finished or formule.dnf_status:
+                elif race_finished or player.formule_list[player.formule_index].dnf_status:
                     if event.key == pygame.K_SPACE:
                         return "MENU", reward_coins
 
         if race_started and not race_finished:
             key = pygame.key.get_pressed()
-            formule.control(key)
-            formule.move(screen, world_map)
+            player.formule_list[player.formule_index].control(key)
+            player.formule_list[player.formule_index].move(world_map)
 
-            if not formule.dnf_status:
+            if not player.formule_list[player.formule_index].dnf_status:
                 elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
 
-                if checkpoint.collidepoint(formule.x, formule.y):
+                if checkpoint.collidepoint(player.formule_list[player.formule_index].x, player.formule_list[player.formule_index].y):
                     checkpoint_passed = True
-                if line.collidepoint(formule.x, formule.y) and checkpoint_passed:
+                if line.collidepoint(player.formule_list[player.formule_index].x, player.formule_list[player.formule_index].y) and checkpoint_passed:
                     checkpoint_passed = False
                     if current_lap < total_laps:
                         current_lap += 1
@@ -76,38 +76,38 @@ def run(fps, time, formule):
 
         camera_view.fill(settings.colour.Green)
 
-        offset_x = (cam_size // 2) - int(formule.x)
-        offset_y = (cam_size // 2) - int(formule.y)
+        offset_x = (cam_size // 2) - int(player.formule_list[player.formule_index].x)
+        offset_y = (cam_size // 2) - int(player.formule_list[player.formule_index].y)
         camera_view.blit(world_map, (offset_x, offset_y))
 
         zoomed_view = pygame.transform.scale(camera_view, (cam_size * 2, cam_size * 2))
 
-        rotated_world = pygame.transform.rotate(zoomed_view, formule.angle + 90)
+        rotated_world = pygame.transform.rotate(zoomed_view, player.formule_list[player.formule_index].angle + 90)
 
-        world_rect = rotated_world.get_rect(center=(screen_w // 2, screen_h // 2))
-        screen.blit(rotated_world, world_rect)
+        world_rect = rotated_world.get_rect(center=(settings.width // 2, settings.height // 2))
+        settings.screen.blit(rotated_world, world_rect)
 
-        formule.render(screen)
-        hud(screen, formule, elapsed_time, current_lap, total_laps, font_hud)
+        player.formule_list[player.formule_index].render()
+        hud(player.formule_list[player.formule_index], elapsed_time, current_lap, total_laps, font_hud)
 
         if not race_started:
-            draw_panel(screen, font_big, "STISKNI MEZERNIK PRO START", (255, 255, 0))
+            draw_panel(settings.screen, font_big, "STISKNI MEZERNIK PRO START", (255, 255, 0))
         elif race_finished:
-            draw_panel(screen, font_big, f"CIL! Vyhra: +{reward_coins} Coins (Stiskni SPACE)", (50, 255, 50))
-        elif formule.dnf_status:
-            draw_panel(screen, font_big, "DNF - AUTO ZNICENO! (Stiskni SPACE)", (255, 50, 50))
+            draw_panel(settings.screen, font_big, f"CIL! Vyhra: +{reward_coins} Coins (Stiskni SPACE)", (50, 255, 50))
+        elif player.formule_list[player.formule_index].dnf_status:
+            draw_panel(settings.screen, font_big, "DNF - AUTO ZNICENO! (Stiskni SPACE)", (255, 50, 50))
         pygame.display.flip()
-        time.tick(fps)
+        settings.time.tick(settings.fps)
 def draw_panel(screen, font, text, colour):
     screen_w, screen_h = screen.get_size()
     text_surf = font.render(text, True, colour)
     text_rect = text_surf.get_rect(center=(screen_w // 2, screen_h // 2 - 120))
     pygame.draw.rect(screen, (0, 0, 0), text_rect.inflate(40, 20), border_radius=10)
     screen.blit(text_surf, text_rect)
-def hud(screen, player, elapsed_time,current_lap, total_laps, font_hud):
+def hud(formule, elapsed_time,current_lap, total_laps, font_hud):
     font_hud = pygame.font.SysFont("Arial", 36)
 
-    kmh = int(abs(player.speed) * 45)
+    kmh = int(abs(formule.speed) * 45)
 
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
@@ -119,15 +119,15 @@ def hud(screen, player, elapsed_time,current_lap, total_laps, font_hud):
         f"Lap: {current_lap} / {total_laps}",
         f"Time: {time_string}",
         f"Speed: {kmh} km/h",
-        f"Tires ({player.tires}): {int(player.tire_status)} %",
-        f"Brakes: {int(player.brakes_status)} %",
-        f"Engine: {int(player.engine_status)} %",
-        f"Body: {int(player.body_status)} %"
+        f"Tires ({formule.tires}): {int(formule.tire_status)} %",
+        f"Brakes: {int(formule.brakes_status)} %",
+        f"Engine: {int(formule.engine_status)} %",
+        f"Body: {int(formule.body_status)} %"
     ]
 
-    if player.dnf_status:
+    if formule.dnf_status:
         stats.append("STAV: DNF (Zniceno!)")
 
     for i, radek in enumerate(stats):
         text_surf = font_hud.render(radek, True, (255, 255, 255))
-        screen.blit(text_surf, (20, 15 + i * 25))
+        settings.screen.blit(text_surf, (20, 15 + i * 25))

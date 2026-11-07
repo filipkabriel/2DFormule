@@ -35,7 +35,7 @@ def draw(player):
             settings.draw_button(buttonGarage, "GARAGE",fontButton, mouse_pos)
             settings.draw_button(buttonEnd, "QUIT",fontButton, mouse_pos)
         elif settings.state == "PLAY":
-            reward = game.run(player.formule_list[player.formule_index])
+            reward = game.run(player)
             player.coins += reward
 
         if settings.state == "QUIT":
