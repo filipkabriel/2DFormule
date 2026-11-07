@@ -1,14 +1,9 @@
 ﻿import pygame
 import math
+import player
+import settings
 
-def run(screen, fps, time, formule):
-    screen_w, screen_h = screen.get_size()
-    colourBlack = (0, 0, 0)
-    colourPath = (80, 80, 80)
-    colourGrass = (0, 153, 0)
-    colourRed = (255, 0, 0)
-    colourLightGray = (130, 130, 130)
-    colourWhite = (255, 255, 255)
+def run(fps, time, formule):
 
     map_w, map_h = 2400, 1600
     world_map = pygame.Surface((map_w, map_h))
@@ -19,25 +14,14 @@ def run(screen, fps, time, formule):
     line = pygame.Rect(1100, 1150, 20, 250)
     checkpoint = pygame.Rect(1100, 200, 50, 250)
 
-    world_map.fill(colourGrass)
-    pygame.draw.rect(world_map, colourPath, track, border_radius=120)
-    pygame.draw.rect(world_map, colourWhite, track, width=6, border_radius=120)
-    pygame.draw.rect(world_map, colourGrass, inner_grass, border_radius=80)
-    pygame.draw.rect(world_map, colourWhite, inner_grass, width=6, border_radius=80)
-    pygame.draw.rect(world_map, colourWhite, line)
+    world_map.fill(settings.colour.Green)
+    pygame.draw.rect(world_map, settings.colour.LightGray, track, border_radius=120)
+    pygame.draw.rect(world_map, settings.colour.White, track, width=6, border_radius=120)
+    pygame.draw.rect(world_map, settings.colour.Green, inner_grass, border_radius=80)
+    pygame.draw.rect(world_map, settings.colour.White, inner_grass, width=6, border_radius=80)
+    pygame.draw.rect(world_map, settings.colour.White, line)
 
-    formule = Formule(
-        formule["ai"],
-        formule["name"],
-        430, 485,
-        formule["colour"],
-        formule["engine"],
-        formule["transmission"],
-        formule["steering"],
-        formule["brakes"],
-        formule["weight"],
-        formule["tires"]
-    )
+
 
     font_hud = pygame.font.SysFont("Arial", 32)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)
@@ -90,7 +74,7 @@ def run(screen, fps, time, formule):
                         race_finished = True
                         reward_coins = 300
 
-        camera_view.fill(colourGrass)
+        camera_view.fill(settings.colour.Green)
 
         offset_x = (cam_size // 2) - int(formule.x)
         offset_y = (cam_size // 2) - int(formule.y)

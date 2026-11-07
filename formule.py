@@ -1,6 +1,8 @@
 import math
 import pygame
 
+import settings
+
 class Formule:
     def __init__(self, ai, name, x, y, colour, engine, transmission, steering, brakes, weight, tires):
         self.ai = ai
@@ -75,7 +77,7 @@ class Formule:
                 self.angle += steer_speed * ride_dir
                 self.tire_status = max(0.0, self.tire_status - 0.001 * abs(self.speed))
                 self.steering_status = max(0.0, self.steering_status - 0.002)
-    def move(self, screen, world_map):
+    def move(self, world_map):
         map_w, map_h = world_map.get_size()
 
         rad = math.radians(self.angle)
@@ -100,7 +102,7 @@ class Formule:
 
         if self.engine_status <= 0 or self.transmission_status <= 0 or self.body_status <= 0:
             self.dnf_status = True
-    def render(self, screen):
+    def render(self):
         shape = pygame.Surface((20, 40), pygame.SRCALPHA)
 
         pygame.draw.rect(shape, self.colour, (3, 0, 14, 40), border_radius=4)
@@ -109,6 +111,5 @@ class Formule:
 
         zoomed_car = pygame.transform.scale(shape, (40, 80))
 
-        screen_w, screen_h = screen.get_size()
-        pos = zoomed_car.get_rect(center=(screen_w // 2, screen_h // 2))
-        screen.blit(zoomed_car, pos)
+        pos = zoomed_car.get_rect(center=(settings.width // 2, settings.height // 2))
+        settings.screen.blit(zoomed_car, pos)
