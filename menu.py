@@ -1,9 +1,9 @@
 import pygame
 import game
+import garage
 import settings
 
-fontButton = pygame.font.SysFont("Arial", 36)
-fontTitle = pygame.font.SysFont("Arial", 80)
+
 
 buttonPlay = pygame.Rect(700, 300, 200, 60)
 buttonGarage = pygame.Rect(700, 400, 200, 60)
@@ -28,15 +28,14 @@ def draw(player):
         if settings.state == "MENU":
             settings.screen.fill(settings.colour.Black)
 
-            title_surf = fontTitle.render("2D Formule", True, settings.colour.White)
+            title_surf = settings.fontTitle.render("2D Formule", True, settings.colour.White)
             settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 150)))
 
-            settings.draw_button(buttonPlay,  "PLAY",fontButton, mouse_pos)
-            settings.draw_button(buttonGarage, "GARAGE",fontButton, mouse_pos)
-            settings.draw_button(buttonEnd, "QUIT",fontButton, mouse_pos)
+            settings.draw_button(buttonPlay,  "PLAY",settings.fontButton, mouse_pos)
+            settings.draw_button(buttonGarage, "GARAGE",settings.fontButton, mouse_pos)
+            settings.draw_button(buttonEnd, "QUIT",settings.fontButton, mouse_pos)
         elif settings.state == "PLAY":
             reward = game.run(player)
             player.coins += reward
-
-        if settings.state == "QUIT":
-            settings.menuStatus = False
+        elif settings.state == "GARAGE":
+            garage.menu(player)

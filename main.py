@@ -7,11 +7,7 @@ import settings
 import json
 import os
 
-
 player = player.Player()
-
-upgrade_cost = 200
-
 
 def save_game(coins, formule_list):
     data = {

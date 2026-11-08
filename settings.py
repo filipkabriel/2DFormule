@@ -8,6 +8,10 @@ pygame.display.set_caption("2D Formule")
 state = "MENU"
 menuStatus = True
 save_file = "save.json"
+
+fontButton = pygame.font.SysFont("Arial", 36)
+fontTitle = pygame.font.SysFont("Arial", 80)
+
 class colour:
     Black = (0, 0, 0)
     Gray = (80, 80, 80)
