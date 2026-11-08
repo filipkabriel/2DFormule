@@ -1,6 +1,5 @@
 import math
 import pygame
-
 import settings
 
 class Formule:
@@ -66,7 +65,7 @@ class Formule:
             self.speed = 0.0
 
         if abs(self.speed) > 0.1:
-            ride_dir  = 1 if self.speed > 0 else -1
+            ride_dir = 1 if self.speed > 0 else -1
 
             if key[pygame.K_a]:
                 self.angle -= steer_speed * ride_dir
@@ -77,8 +76,11 @@ class Formule:
                 self.angle += steer_speed * ride_dir
                 self.tire_status = max(0.0, self.tire_status - 0.001 * abs(self.speed))
                 self.steering_status = max(0.0, self.steering_status - 0.002)
-    def move(self, world_map):
-        map_w, map_h = world_map.get_size()
+
+    def move(self, logic_map):
+        map_w, map_h = logic_map.get_size()
+
+        old_x, old_y = self.x, self.y
 
         rad = math.radians(self.angle)
         self.x += math.cos(rad) * self.speed
@@ -94,14 +96,23 @@ class Formule:
             self.y = pygame.math.clamp(self.y, 20, map_h - 20)
 
         pos_pixel = (int(self.x), int(self.y))
-        detected_colour = world_map.get_at(pos_pixel)[:3]
+        detected_colour = logic_map.get_at(pos_pixel)[:3]
 
         if detected_colour == (0, 153, 0):
             self.speed *= 0.90
             self.tire_status = max(0.0, self.tire_status - 0.03 * abs(self.speed))
 
+        elif detected_colour == (255, 0, 0):
+            if abs(self.speed) > 1.0:
+                self.body_status = max(0.0, self.body_status - abs(self.speed) * 3)
+            self.x, self.y = old_x, old_y
+            self.speed = -self.speed * 0.4
+
         if self.engine_status <= 0 or self.transmission_status <= 0 or self.body_status <= 0:
             self.dnf_status = True
+
+        return detected_colour
+
     def render(self):
         shape = pygame.Surface((20, 40), pygame.SRCALPHA)
 
