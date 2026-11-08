@@ -1,4 +1,5 @@
 ﻿import pygame
+import math
 import os
 import settings
 
@@ -71,8 +72,9 @@ def load_track_layers(track_index):
 
 def run(player, track_index=0):
     visual_map, logic_map, total_laps, track_reward = load_track_layers(track_index)
+    start_x, start_y = TRACKS[track_index]["start_pos"]
 
-    font_hud = pygame.font.SysFont("Arial", 32)
+    font_hud = pygame.font.SysFont("Arial", 28, bold=True)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)
 
     cam_size = 900
@@ -112,17 +114,21 @@ def run(player, track_index=0):
                     if event.key == pygame.K_SPACE:
                         return "MENU", reward_coins
 
+        in_pit_zone = math.hypot(car.x - start_x, car.y - start_y) < 180
+
         if race_started and not race_finished:
             key = pygame.key.get_pressed()
             car.control(key)
             under_car_colour = car.move(logic_map)
+
+            if in_pit_zone and abs(car.speed) < 0.5 and key[pygame.K_r] and not car.dnf_status:
+                car.pit_stop_repair()
 
             if not car.dnf_status:
                 elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
 
                 if under_car_colour == (0, 0, 255):
                     checkpoint_passed = True
-
                 elif under_car_colour == (255, 255, 255) and checkpoint_passed:
                     checkpoint_passed = False
                     if current_lap < total_laps:
@@ -146,14 +152,14 @@ def run(player, track_index=0):
         settings.screen.blit(rotated_world, world_rect)
 
         car.render()
-        hud(car, elapsed_time, current_lap, total_laps, font_hud)
+        hud(car, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone)
 
         if not race_started:
-            draw_panel(settings.screen, font_big, "STISKNI MEZERNIK PRO START", (255, 255, 0))
+            draw_panel(settings.screen, font_big, "Press SPACE to start", (255, 255, 0))
         elif race_finished:
-            draw_panel(settings.screen, font_big, f"CIL! Vyhra: +{reward_coins} Coins (Stiskni SPACE)", (50, 255, 50))
+            draw_panel(settings.screen, font_big, f"WIN: +{reward_coins} Coins (Press SPACE)", (50, 255, 50))
         elif car.dnf_status:
-            draw_panel(settings.screen, font_big, "DNF - AUTO ZNICENO! (Stiskni SPACE)", (255, 50, 50))
+            draw_panel(settings.screen, font_big, "DNF - FORMULE - DESTROYED! (Press SPACE)", (255, 50, 50))
 
         pygame.display.flip()
         settings.time.tick(settings.fps)
@@ -165,30 +171,49 @@ def draw_panel(screen, font, text, colour):
     pygame.draw.rect(screen, (0, 0, 0), text_rect.inflate(40, 20), border_radius=10)
     screen.blit(text_surf, text_rect)
 
-def hud(formule, elapsed_time, current_lap, total_laps, font_hud):
-    font_hud = pygame.font.SysFont("Arial", 36)
+def get_status_colour(val):
+    if val > 60:
+        return (100, 255, 100)
+    elif val > 25:
+        return (255, 215, 0)
+    else:
+        return (255, 70, 70)
 
+def hud(formule, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone):
     kmh = int(abs(formule.speed) * 45)
 
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
     hundredths = int((elapsed_time * 100) % 100)
-
     time_string = f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
 
-    stats = [
-        f"Lap: {current_lap} / {total_laps}",
-        f"Time: {time_string}",
-        f"Speed: {kmh} km/h",
-        f"Tires ({formule.tires}): {int(formule.tire_status)} %",
-        f"Brakes: {int(formule.brakes_status)} %",
-        f"Engine: {int(formule.engine_status)} %",
-        f"Body: {int(formule.body_status)} %"
+    # Tmavý poloprůhledný podklad pod HUD pro lepší čitelnost
+    hud_bg = pygame.Surface((330, 310), pygame.SRCALPHA)
+    hud_bg.fill((0, 0, 0, 150))
+    settings.screen.blit(hud_bg, (10, 10))
+
+    basic_info = [
+        (f"Lap: {current_lap} / {total_laps}", (255, 255, 255)),
+        (f"Time: {time_string}", (255, 255, 255)),
+        (f"Speed: {kmh} km/h", (200, 230, 255)),
     ]
 
-    if formule.dnf_status:
-        stats.append("STAV: DNF (Zniceno!)")
+    tire_note = " (DEFECT!)" if formule.tire_status <= 5.0 else ""
+    component_info = [
+        (f"Tires ({formule.tires.upper()}): {int(formule.tire_status)} %{tire_note}", get_status_colour(formule.tire_status)),
+        (f"Brakes: {int(formule.brakes_status)} %", get_status_colour(formule.brakes_status)),
+        (f"Engine: {int(formule.engine_status)} %", get_status_colour(formule.engine_status)),
+        (f"Transmission: {int(formule.transmission_status)} %", get_status_colour(formule.transmission_status)),
+        (f"Steering: {int(formule.steering_status)} %", get_status_colour(formule.steering_status)),
+        (f"Body / Aero: {int(formule.body_status)} %", get_status_colour(formule.body_status)),
+    ]
 
-    for i, radek in enumerate(stats):
-        text_surf = font_hud.render(radek, True, (255, 255, 255))
-        settings.screen.blit(text_surf, (20, 15 + i * 25))
+    all_rows = basic_info + component_info
+
+    for i, (text, col) in enumerate(all_rows):
+        text_surf = font_hud.render(text, True, col)
+        settings.screen.blit(text_surf, (22, 18 + i * 30))
+
+    if in_pit_zone and not formule.dnf_status:
+        pit_surf = font_hud.render("PIT ZONE: Stop and hold [R] to repair", True, (255, 255, 0))
+        settings.screen.blit(pit_surf, (20, 330))
