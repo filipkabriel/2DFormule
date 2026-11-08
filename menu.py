@@ -15,7 +15,6 @@ buttonTrack3 = pygame.Rect(600, 480, 400, 60)
 buttonBackTrack = pygame.Rect(700, 620, 200, 60)
 
 def reset_car_for_race(car, start_pos):
-    # Nastaví auto na startovní čáru a opraví opotřebení před závodem
     car.x, car.y = start_pos
     car.angle = 180
     car.speed = 0
@@ -62,7 +61,6 @@ def draw(player):
             if event.key == pygame.K_ESCAPE and settings.state in ["GARAGE", "TRACK_SELECT"]:
                 settings.state = "MENU"
 
-    # Vykreslování jednotlivých obrazovek
     if settings.state == "MENU":
         settings.screen.fill(settings.colour.Black)
 
@@ -76,7 +74,7 @@ def draw(player):
     elif settings.state == "TRACK_SELECT":
         settings.screen.fill((20, 30, 20))
 
-        title_surf = settings.fontTitle.render("VYBER TRAT", True, settings.colour.White)
+        title_surf = settings.fontTitle.render("SELECT TRACK", True, settings.colour.White)
         settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 150)))
 
         settings.draw_button(buttonTrack1, "1. Standard Oval (3 kola)", settings.fontButton, mouse_pos)

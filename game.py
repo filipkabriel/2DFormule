@@ -187,7 +187,6 @@ def hud(formule, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone):
     hundredths = int((elapsed_time * 100) % 100)
     time_string = f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
 
-    # Tmavý poloprůhledný podklad pod HUD pro lepší čitelnost
     hud_bg = pygame.Surface((330, 310), pygame.SRCALPHA)
     hud_bg.fill((0, 0, 0, 150))
     settings.screen.blit(hud_bg, (10, 10))
