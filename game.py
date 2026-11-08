@@ -2,26 +2,68 @@
 import math
 import settings
 
-def create_map():
-    map_w, map_h = 2400, 1600
+TRACKS = [
+    {
+        "name": "Standard Oval",
+        "map_size": (2400, 1600),
+        "outer": (200, 200, 2000, 1200, 120),
+        "inner": (450, 450, 1500, 700, 80),
+        "line": (1100, 1150, 20, 250),
+        "checkpoint": (1100, 200, 50, 250),
+        "start_pos": (1150, 1275),
+        "laps": 3,
+        "reward": 300
+    },
+    {
+        "name": "Short Sprint",
+        "map_size": (1800, 1200),
+        "outer": (150, 150, 1500, 900, 200),
+        "inner": (400, 400, 1000, 400, 100),
+        "line": (850, 800, 20, 250),
+        "checkpoint": (850, 150, 50, 250),
+        "start_pos": (900, 925),
+        "laps": 5,
+        "reward": 250
+    },
+    {
+        "name": "Grand Prix",
+        "map_size": (3200, 2000),
+        "outer": (200, 200, 2800, 1600, 60),
+        "inner": (500, 500, 2200, 1000, 30),
+        "line": (1500, 1500, 20, 300),
+        "checkpoint": (1500, 200, 50, 300),
+        "start_pos": (1560, 1650),
+        "laps": 2,
+        "reward": 500
+    }
+]
+def get_start_pos(track_index):
+    return TRACKS[track_index]["start_pos"]
+def create_map(track_index):
+    t = TRACKS[track_index]
+    map_w, map_h = t["map_size"]
     world_map = pygame.Surface((map_w, map_h))
 
-    track = pygame.Rect(200, 200, 2000, 1200)
-    inner_grass = pygame.Rect(450, 450, 1500, 700)
+    ox, oy, ow, oh, orad = t["outer"]
+    ix, iy, iw, ih, irad = t["inner"]
 
-    line = pygame.Rect(1100, 1150, 20, 250)
-    checkpoint = pygame.Rect(1100, 200, 50, 250)
+    track = pygame.Rect(ox, oy, ow, oh)
+    inner_grass = pygame.Rect(ix, iy, iw, ih)
+
+    line = pygame.Rect(*t["line"])
+    checkpoint = pygame.Rect(*t["checkpoint"])
 
     world_map.fill(settings.colour.Green)
-    pygame.draw.rect(world_map, settings.colour.LightGray, track, border_radius=120)
-    pygame.draw.rect(world_map, settings.colour.White, track, width=6, border_radius=120)
-    pygame.draw.rect(world_map, settings.colour.Green, inner_grass, border_radius=80)
-    pygame.draw.rect(world_map, settings.colour.White, inner_grass, width=6, border_radius=80)
+    pygame.draw.rect(world_map, settings.colour.LightGray, track, border_radius=orad)
+    pygame.draw.rect(world_map, settings.colour.White, track, width=6, border_radius=orad)
+    pygame.draw.rect(world_map, settings.colour.Green, inner_grass, border_radius=irad)
+    pygame.draw.rect(world_map, settings.colour.White, inner_grass, width=6, border_radius=irad)
     pygame.draw.rect(world_map, settings.colour.White, line)
-    return world_map, line, checkpoint
 
-def run(player):
-    world_map, line, checkpoint = create_map()
+    return world_map, line, checkpoint, t["laps"], t["reward"]
+
+def run(player, track_index=0):
+    world_map, line, checkpoint, total_laps, track_reward = create_map(track_index)
 
     font_hud = pygame.font.SysFont("Arial", 32)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)

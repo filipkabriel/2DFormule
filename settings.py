@@ -6,6 +6,7 @@ width, height = 1600, 900
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("2D Formule")
 state = "MENU"
+selected_track = 0
 menuStatus = True
 save_file = "save.json"
 
