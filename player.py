@@ -10,6 +10,7 @@ class Player:
     def __init__(self):
         self.coins = 0
         self.formule_index = 0
+        self.statistics = Statistics()
         self.formule_list = [
             formule.Formule(
                 ai=False,
@@ -53,7 +54,8 @@ class Player:
         data = {
             "coins": self.coins,
             "formule_index": self.formule_index,
-            "formule_list": cars_data
+            "formule_list": cars_data,
+            "statistics": self.statistics.to_dict()
         }
 
         with open(settings.save_file, "w", encoding="utf-8") as file:
@@ -67,6 +69,9 @@ class Player:
 
                 self.coins = data.get("coins", 0)
                 self.formule_index = data.get("formule_index", 0)
+
+                if "statistics" in data:
+                    self.statistics.from_dict(data["statistics"])
 
                 loaded_cars = []
                 for auto_dict in data.get("formule_list", []):
@@ -104,5 +109,54 @@ class Statistics:
     def __init__(self):
         self.races = 0
         self.wins = 0
-        self.avg_times = 0
-        self.best_time = 0
+        self.dnf_count = 0
+        self.total_distance = 0.0
+        self.best_lap_times = [0.0, 0.0, 0.0]
+        self.best_race_times = [0.0, 0.0, 0.0]
+        self.avg_times = [0.0, 0.0, 0.0]
+
+    def record_race_start(self):
+        self.races += 1
+
+    def record_dnf(self):
+        self.dnf_count += 1
+
+    def record_lap(self, track_index, lap_time):
+        if lap_time <= 0:
+            return
+        if self.best_lap_times[track_index] == 0.0 or lap_time < self.best_lap_times[track_index]:
+            self.best_lap_times[track_index] = lap_time
+
+    def record_win(self, track_index, total_time, distance):
+        self.wins += 1
+        self.total_distance += distance
+        if total_time > 0:
+            if self.best_race_times[track_index] == 0.0 or total_time < self.best_race_times[track_index]:
+                self.best_race_times[track_index] = total_time
+            if self.avg_times[track_index] == 0.0:
+                self.avg_times[track_index] = total_time
+            else:
+                self.avg_times[track_index] = (self.avg_times[track_index] + total_time) / 2.0
+
+    def add_distance(self, distance):
+        self.total_distance += distance
+
+    def to_dict(self):
+        return {
+            "races": self.races,
+            "wins": self.wins,
+            "dnf_count": self.dnf_count,
+            "total_distance": self.total_distance,
+            "best_lap_times": self.best_lap_times,
+            "best_race_times": self.best_race_times,
+            "avg_times": self.avg_times
+        }
+
+    def from_dict(self, data):
+        self.races = data.get("races", 0)
+        self.wins = data.get("wins", 0)
+        self.dnf_count = data.get("dnf_count", 0)
+        self.total_distance = data.get("total_distance", 0.0)
+        self.best_lap_times = data.get("best_lap_times", [0.0, 0.0, 0.0])
+        self.best_race_times = data.get("best_race_times", [0.0, 0.0, 0.0])
+        self.avg_times = data.get("avg_times", [0.0, 0.0, 0.0])

@@ -82,8 +82,11 @@ def run(player, track_index=0):
 
     race_started = False
     race_finished = False
+    dnf_recorded = False
     start_ticks = 0
     elapsed_time = 0.0
+    lap_start_time = 0.0
+    last_lap_time = 0.0
 
     current_lap = 1
     checkpoint_passed = False
@@ -91,6 +94,7 @@ def run(player, track_index=0):
 
     car = player.formule_list[player.formule_index]
     car.angle = TRACKS[track_index]["start_angle"]
+    car.distance = 0.0
 
     show_logic_map = False
 
@@ -98,10 +102,14 @@ def run(player, track_index=0):
     while gameStatus:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                if race_started and not race_finished and not dnf_recorded:
+                    player.statistics.add_distance(car.distance)
                 return "QUIT", 0
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    if race_started and not race_finished and not dnf_recorded:
+                        player.statistics.add_distance(car.distance)
                     return "MENU", 0
 
                 if event.key == pygame.K_m:
@@ -110,6 +118,8 @@ def run(player, track_index=0):
                 if event.key == pygame.K_SPACE and not race_started:
                     race_started = True
                     start_ticks = pygame.time.get_ticks()
+                    lap_start_time = 0.0
+                    player.statistics.record_race_start()
                 elif race_finished or car.dnf_status:
                     if event.key == pygame.K_SPACE:
                         return "MENU", reward_coins
@@ -124,6 +134,11 @@ def run(player, track_index=0):
             if in_pit_zone and abs(car.speed) < 0.5 and key[pygame.K_r] and not car.dnf_status:
                 car.pit_stop_repair()
 
+            if car.dnf_status and not dnf_recorded:
+                dnf_recorded = True
+                player.statistics.record_dnf()
+                player.statistics.add_distance(car.distance)
+
             if not car.dnf_status:
                 elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000.0
 
@@ -131,11 +146,16 @@ def run(player, track_index=0):
                     checkpoint_passed = True
                 elif under_car_colour == (255, 255, 255) and checkpoint_passed:
                     checkpoint_passed = False
+                    last_lap_time = elapsed_time - lap_start_time
+                    lap_start_time = elapsed_time
+                    player.statistics.record_lap(track_index, last_lap_time)
+
                     if current_lap < total_laps:
                         current_lap += 1
                     else:
                         race_finished = True
                         reward_coins = track_reward
+                        player.statistics.record_win(track_index, elapsed_time, car.distance)
 
         camera_view.fill(settings.colour.Green)
 
@@ -152,7 +172,7 @@ def run(player, track_index=0):
         settings.screen.blit(rotated_world, world_rect)
 
         car.render()
-        hud(car, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone)
+        hud(car, elapsed_time, last_lap_time, player.statistics.best_lap_times[track_index], current_lap, total_laps, font_hud, in_pit_zone)
 
         if not race_started:
             draw_panel(settings.screen, font_big, "Press SPACE to start", (255, 255, 0))
@@ -179,21 +199,26 @@ def get_status_colour(val):
     else:
         return (255, 70, 70)
 
-def hud(formule, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone):
+def format_time(t):
+    if t <= 0:
+        return "--:--.--"
+    minutes = int(t // 60)
+    seconds = int(t % 60)
+    hundredths = int((t * 100) % 100)
+    return f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
+
+def hud(formule, elapsed_time, last_lap_time, best_lap_time, current_lap, total_laps, font_hud, in_pit_zone):
     kmh = int(abs(formule.speed) * 45)
 
-    minutes = int(elapsed_time // 60)
-    seconds = int(elapsed_time % 60)
-    hundredths = int((elapsed_time * 100) % 100)
-    time_string = f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
-
-    hud_bg = pygame.Surface((330, 310), pygame.SRCALPHA)
+    hud_bg = pygame.Surface((350, 370), pygame.SRCALPHA)
     hud_bg.fill((0, 0, 0, 150))
     settings.screen.blit(hud_bg, (10, 10))
 
     basic_info = [
         (f"Lap: {current_lap} / {total_laps}", (255, 255, 255)),
-        (f"Time: {time_string}", (255, 255, 255)),
+        (f"Time: {format_time(elapsed_time)}", (255, 255, 255)),
+        (f"Last Lap: {format_time(last_lap_time)}", (200, 200, 200)),
+        (f"Best Lap: {format_time(best_lap_time)}", (180, 130, 255)),
         (f"Speed: {kmh} km/h", (200, 230, 255)),
     ]
 
@@ -215,4 +240,4 @@ def hud(formule, elapsed_time, current_lap, total_laps, font_hud, in_pit_zone):
 
     if in_pit_zone and not formule.dnf_status:
         pit_surf = font_hud.render("PIT ZONE: Stop and hold [R] to repair", True, (255, 255, 0))
-        settings.screen.blit(pit_surf, (20, 330))
+        settings.screen.blit(pit_surf, (20, 390))
