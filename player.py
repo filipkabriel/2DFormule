@@ -111,9 +111,17 @@ class Statistics:
         self.wins = 0
         self.dnf_count = 0
         self.total_distance = 0.0
-        self.best_lap_times = [0.0, 0.0, 0.0]
-        self.best_race_times = [0.0, 0.0, 0.0]
-        self.avg_times = [0.0, 0.0, 0.0]
+        self.track_stats = {}
+
+    def get_track(self, track_name):
+        if track_name not in self.track_stats:
+            self.track_stats[track_name] = {
+                "best_lap": 0.0,
+                "best_race": 0.0,
+                "avg_race": 0.0,
+                "wins": 0
+            }
+        return self.track_stats[track_name]
 
     def record_race_start(self):
         self.races += 1
@@ -121,22 +129,25 @@ class Statistics:
     def record_dnf(self):
         self.dnf_count += 1
 
-    def record_lap(self, track_index, lap_time):
+    def record_lap(self, track_name, lap_time):
         if lap_time <= 0:
             return
-        if self.best_lap_times[track_index] == 0.0 or lap_time < self.best_lap_times[track_index]:
-            self.best_lap_times[track_index] = lap_time
+        t = self.get_track(track_name)
+        if t["best_lap"] == 0.0 or lap_time < t["best_lap"]:
+            t["best_lap"] = lap_time
 
-    def record_win(self, track_index, total_time, distance):
+    def record_win(self, track_name, total_time, distance):
         self.wins += 1
         self.total_distance += distance
+        t = self.get_track(track_name)
+        t["wins"] += 1
         if total_time > 0:
-            if self.best_race_times[track_index] == 0.0 or total_time < self.best_race_times[track_index]:
-                self.best_race_times[track_index] = total_time
-            if self.avg_times[track_index] == 0.0:
-                self.avg_times[track_index] = total_time
+            if t["best_race"] == 0.0 or total_time < t["best_lap"]:
+                t["best_lap"] = total_time
+            if t["best_lap"] == 0.0:
+                t["best_lap"] = total_time
             else:
-                self.avg_times[track_index] = (self.avg_times[track_index] + total_time) / 2.0
+                t["best_lap"] = (t["best_lap"] + total_time) / 2.0
 
     def add_distance(self, distance):
         self.total_distance += distance
@@ -147,9 +158,7 @@ class Statistics:
             "wins": self.wins,
             "dnf_count": self.dnf_count,
             "total_distance": self.total_distance,
-            "best_lap_times": self.best_lap_times,
-            "best_race_times": self.best_race_times,
-            "avg_times": self.avg_times
+            "track_stats": self.track_stats
         }
 
     def from_dict(self, data):
@@ -157,6 +166,4 @@ class Statistics:
         self.wins = data.get("wins", 0)
         self.dnf_count = data.get("dnf_count", 0)
         self.total_distance = data.get("total_distance", 0.0)
-        self.best_lap_times = data.get("best_lap_times", [0.0, 0.0, 0.0])
-        self.best_race_times = data.get("best_race_times", [0.0, 0.0, 0.0])
-        self.avg_times = data.get("avg_times", [0.0, 0.0, 0.0])
+        self.track_stats = data.get("track_stats", {})

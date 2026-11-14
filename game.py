@@ -3,49 +3,35 @@ import math
 import os
 import settings
 
+class Track:
+    def __init__(self, name, top_svg, bottom_svg, start_pos, start_angle, laps, reward):
+        self.name = name
+        self.top_svg = top_svg
+        self.bottom_svg = bottom_svg
+        self.start_pos = start_pos
+        self.start_angle = start_angle
+        self.laps = laps
+        self.reward = reward
+
 TRACKS = [
-    {
-        "name": "Track 1",
-        "top_svg": "tracks/track1_top.svg",
-        "bottom_svg": "tracks/track1_bottom.svg",
-        "start_pos": (1150, 1275),
-        "start_angle": 180,
-        "laps": 3,
-        "reward": 300
-    },
-    {
-        "name": "Track 2",
-        "top_svg": "tracks/track2_top.svg",
-        "bottom_svg": "tracks/track2_bottom.svg",
-        "start_pos": (900, 925),
-        "start_angle": 180,
-        "laps": 5,
-        "reward": 250
-    },
-    {
-        "name": "Track 3",
-        "top_svg": "tracks/track3_top.svg",
-        "bottom_svg": "tracks/track3_bottom.svg",
-        "start_pos": (1560, 1650),
-        "start_angle": 180,
-        "laps": 2,
-        "reward": 500
-    }
+    Track("Standart Oval", "tracks/track1_top.svg", "tracks/track1_bottom.svg", (1150, 1275), 180, 3, 300),
+    Track("Short Sprint", "tracks/track2_top.svg", "tracks/track2_bottom.svg", (900, 925), 180, 5, 250),
+    Track("Grand Prix", "tracks/track3_top.svg", "tracks/track3_bottom.svg", (1560, 1650), 180, 2, 500)
 ]
 
 def get_start_pos(track_index):
-    return TRACKS[track_index]["start_pos"]
+    return TRACKS[track_index].start_pos
 
 def load_track_layers(track_index):
     t = TRACKS[track_index]
-    top_path = t["top_svg"]
-    bottom_path = t["bottom_svg"]
+    top_path = t.top_svg
+    bottom_path = t.bottom_svg
 
     if os.path.exists(top_path) and os.path.exists(bottom_path):
         visual_map = pygame.image.load(top_path).convert()
         logic_map = pygame.image.load(bottom_path).convert()
     else:
-        print(f"Upozorneni: Soubory {top_path} nebo {bottom_path} nenalezeny, generuji nahradni trat.")
+        print(f" Files {top_path} or {bottom_path} do not exists, generating track.")
         map_w, map_h = 2400, 1600
         visual_map = pygame.Surface((map_w, map_h))
         logic_map = pygame.Surface((map_w, map_h))
@@ -68,11 +54,12 @@ def load_track_layers(track_index):
         pygame.draw.rect(visual_map, (255, 255, 255), inner_rect, width=6, border_radius=80)
         pygame.draw.rect(visual_map, (255, 255, 255), line_rect)
 
-    return visual_map, logic_map, t["laps"], t["reward"]
+    return visual_map, logic_map, t.laps, t.reward
 
 def run(player, track_index=0):
     visual_map, logic_map, total_laps, track_reward = load_track_layers(track_index)
-    start_x, start_y = TRACKS[track_index]["start_pos"]
+    current_track = TRACKS[track_index]
+    start_x, start_y = current_track.start_pos
 
     font_hud = pygame.font.SysFont("Arial", 28, bold=True)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)
@@ -93,7 +80,7 @@ def run(player, track_index=0):
     reward_coins = 0
 
     car = player.formule_list[player.formule_index]
-    car.angle = TRACKS[track_index]["start_angle"]
+    car.angle = current_track.start_angle
     car.distance = 0.0
 
     show_logic_map = False
@@ -148,14 +135,14 @@ def run(player, track_index=0):
                     checkpoint_passed = False
                     last_lap_time = elapsed_time - lap_start_time
                     lap_start_time = elapsed_time
-                    player.statistics.record_lap(track_index, last_lap_time)
+                    player.statistics.record_lap(current_track.name, last_lap_time)
 
                     if current_lap < total_laps:
                         current_lap += 1
                     else:
                         race_finished = True
                         reward_coins = track_reward
-                        player.statistics.record_win(track_index, elapsed_time, car.distance)
+                        player.statistics.record_win(current_track.name, elapsed_time, car.distance)
 
         camera_view.fill(settings.colour.Green)
 
@@ -172,7 +159,7 @@ def run(player, track_index=0):
         settings.screen.blit(rotated_world, world_rect)
 
         car.render()
-        hud(car, elapsed_time, last_lap_time, player.statistics.best_lap_times[track_index], current_lap, total_laps, font_hud, in_pit_zone)
+        hud(car, elapsed_time, last_lap_time, player.statistics.get_track(current_track.name)["best_lap"], current_lap, total_laps, font_hud, in_pit_zone)
 
         if not race_started:
             draw_panel(settings.screen, font_big, "Press SPACE to start", (255, 255, 0))

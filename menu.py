@@ -14,6 +14,7 @@ buttonTrack3 = pygame.Rect(600, 480, 400, 60)
 buttonBackTrack = pygame.Rect(700, 620, 200, 60)
 
 buttonBackStats = pygame.Rect(700, 760, 200, 60)
+stats_scroll_y = 0
 
 def reset_car_for_race(car, start_pos):
     car.x, car.y = start_pos
@@ -31,66 +32,69 @@ def reset_car_for_race(car, start_pos):
     car.brakes_status = 100
 
 def draw_stats(player, mouse_pos):
+    global stats_scroll_y
     settings.screen.fill((22, 24, 32))
 
     title_surf = settings.fontTitle.render("STATISTICS", True, settings.colour.White)
-    settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 90)))
+    settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 80)))
 
     stats = player.statistics
     win_rate = int((stats.wins / stats.races) * 100) if stats.races > 0 else 0
     total_km = round(stats.total_distance / 1000.0, 2)
 
-    overview_rect = pygame.Rect(250, 170, 1100, 160)
+    overview_rect = pygame.Rect(250, 150, 1100, 140)
     pygame.draw.rect(settings.screen, (38, 42, 54), overview_rect, border_radius=12)
 
-    overview_left = [
-        f"Total Races: {stats.races}",
-        f"Wins: {stats.wins} ({win_rate} %)"
+    left_info = [
+        f"Races: {stats.races}   |   Wins: {stats.wins} ({win_rate} %)",
+        f"DNF: {stats.dnf_count}   |   Distance: {total_km} km"
     ]
-    overview_right = [
-        f"DNF (Destroyed): {stats.dnf_count}",
-        f"Total Distance: {total_km} km"
-    ]
-
-    for i, text in enumerate(overview_left):
+    for i, text in enumerate(left_info):
         s = settings.fontButton.render(text, True, settings.colour.White)
-        settings.screen.blit(s, (300, 200 + i * 55))
+        settings.screen.blit(s, (290, 175 + i * 50))
 
-    for i, text in enumerate(overview_right):
-        s = settings.fontButton.render(text, True, settings.colour.Yellow)
-        settings.screen.blit(s, (850, 200 + i * 55))
+    list_border = pygame.Rect(250, 320, 1100, 410)
+    pygame.draw.rect(settings.screen, (38, 42, 54), list_border, border_radius=12)
+    pygame.draw.rect(settings.screen, settings.colour.LightGray, list_border, width=2, border_radius=12)
 
-    tracks_rect = pygame.Rect(250, 360, 1100, 360)
-    pygame.draw.rect(settings.screen, (38, 42, 54), tracks_rect, border_radius=12)
+    row_height = 110
+    content_height = len(game.TRACKS) * row_height + 20
+    min_scroll = min(0, list_border.height - content_height)
+    stats_scroll_y = max(min_scroll, min(0, stats_scroll_y))
 
-    headers = ["TRACK", "BEST LAP", "BEST RACE", "AVG RACE"]
-    header_x = [300, 620, 860, 1100]
-    for text, x_pos in zip(headers, header_x):
-        s = settings.fontButton.render(text, True, settings.colour.LightGray)
-        settings.screen.blit(s, (x_pos, 385))
+    settings.screen.set_clip(list_border)
 
-    track_names = ["1. Standard Oval", "2. Short Sprint", "3. Grand Prix"]
-    for idx, name in enumerate(track_names):
-        y_pos = 460 + idx * 80
-        row_values = [
-            name,
-            game.format_time(stats.best_lap_times[idx]),
-            game.format_time(stats.best_race_times[idx]),
-            game.format_time(stats.avg_times[idx])
-        ]
-        for val, x_pos in zip(row_values, header_x):
-            col = settings.colour.Green if val != "--:--.--" and x_pos > 300 else settings.colour.White
-            s = settings.fontButton.render(val, True, col)
-            settings.screen.blit(s, (x_pos, y_pos))
+    for idx, track in enumerate(game.TRACKS):
+        t_stat = stats.get_track(track.name)
+        card_y = list_border.y + 15 + idx * row_height + stats_scroll_y
+        card_rect = pygame.Rect(list_border.x + 20, card_y, list_border.width - 40, 95)
+
+        pygame.draw.rect(settings.screen, (52, 56, 72), card_rect, border_radius=10)
+
+        name_surf = settings.fontButton.render(f"{idx + 1}. {track.name}", True, settings.colour.Yellow)
+        settings.screen.blit(name_surf, (card_rect.x + 20, card_rect.y + 10))
+
+        times_text = (
+            f"Best Lap: {game.format_time(t_stat['best_lap'])}   |   "
+            f"Best Race: {game.format_time(t_stat['best_race'])}   |   "
+            f"Avg: {game.format_time(t_stat['avg_race'])}"
+        )
+        times_surf = settings.fontButton.render(times_text, True, settings.colour.White)
+        settings.screen.blit(times_surf, (card_rect.x + 20, card_rect.y + 52))
+
+    settings.screen.set_clip(None)
 
     settings.draw_button(buttonBackStats, "BACK", settings.fontButton, mouse_pos)
 
 def draw(player):
     mouse_pos = pygame.mouse.get_pos()
-
+    stats_scroll_y = 0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             settings.menuStatus = False
+
+        if event.type == pygame.MOUSEWHEEL and settings.state == "STATS":
+            stats_scroll_y += event.y * 35
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if settings.state == "MENU":
