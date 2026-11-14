@@ -13,14 +13,19 @@ class Player:
         self.formule_list = [
             formule.Formule(
                 ai=False,
-                name="Formule 1",
+                name="Red Arrow F3",
                 colour=settings.colour.Red,
                 engine=60,
                 transmission=60,
                 steering=60,
                 brakes=60,
-                weight=700,
-                tires=garage.tires_list[garage.tire_index]
+                weight=720,
+                tires=garage.tires_list[garage.tire_index],
+                car_type="Rookie",
+                max_engine=90,
+                max_transmission=90,
+                max_steering=90,
+                max_brakes=90
             )
         ]
         self.load()
@@ -31,13 +36,18 @@ class Player:
             cars_data.append({
                 "ai": auto.ai,
                 "name": auto.name,
+                "car_type": auto.car_type,
                 "colour": list(auto.colour),
                 "engine": auto.engine,
                 "transmission": auto.transmission,
                 "steering": auto.steering,
                 "brakes": auto.brakes,
                 "weight": auto.weight,
-                "tires": auto.tires
+                "tires": auto.tires,
+                "max_engine": auto.max_engine,
+                "max_transmission": auto.max_transmission,
+                "max_steering": auto.max_steering,
+                "max_brakes": auto.max_brakes
             })
 
         data = {
@@ -70,12 +80,19 @@ class Player:
                             steering=auto_dict["steering"],
                             brakes=auto_dict["brakes"],
                             weight=auto_dict["weight"],
-                            tires=auto_dict["tires"]
+                            tires=auto_dict["tires"],
+                            car_type=auto_dict.get("car_type", "Rookie"),
+                            max_engine=auto_dict.get("max_engine", 100),
+                            max_transmission=auto_dict.get("max_transmission", 100),
+                            max_steering=auto_dict.get("max_steering", 100),
+                            max_brakes=auto_dict.get("max_brakes", 100)
                         )
                     )
 
                 if loaded_cars:
                     self.formule_list = loaded_cars
+                    if self.formule_index >= len(self.formule_list):
+                        self.formule_index = 0
                     current_tires = self.formule_list[self.formule_index].tires
                     if current_tires in garage.tires_list:
                         garage.tire_index = garage.tires_list.index(current_tires)

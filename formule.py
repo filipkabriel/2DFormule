@@ -3,9 +3,10 @@ import pygame
 import settings
 
 class Formule:
-    def __init__(self, ai, name, colour, engine, transmission, steering, brakes, weight, tires):
+    def __init__(self, ai, name, colour, engine, transmission, steering, brakes, weight, tires, car_type="Rookie", max_engine=100, max_transmission=100, max_steering=100, max_brakes=100):
         self.ai = ai
         self.name = name
+        self.car_type = car_type
         self.x = 0
         self.y = 0
         self.colour = colour
@@ -15,6 +16,11 @@ class Formule:
         self.brakes = brakes
         self.weight = weight
         self.tires = tires
+
+        self.max_engine = max_engine
+        self.max_transmission = max_transmission
+        self.max_steering = max_steering
+        self.max_brakes = max_brakes
 
         self.dnf_status = False
         self.body_status = 100.0
@@ -34,7 +40,6 @@ class Formule:
         self.slip_intensity = 0.0
 
     def get_tire_modifiers(self):
-
         if self.tires == "soft":
             return 1.22, 1.55
         elif self.tires == "hard":
@@ -185,7 +190,6 @@ class Formule:
 
         self.slip_intensity = math.hypot(target_vx - self.vx, target_vy - self.vy)
         if self.slip_intensity > 0.35:
-
             drift_wear = (self.slip_intensity - 0.35) * 0.012 * tire_wear_mult
             self.tire_status = max(0.0, self.tire_status - drift_wear)
 
@@ -236,7 +240,6 @@ class Formule:
 
     def apply_crash_damage(self, impact_speed):
         if impact_speed > 0.8:
-
             self.body_status = max(0.0, self.body_status - (impact_speed ** 1.4) * 2.2)
             self.steering_status = max(0.0, self.steering_status - (impact_speed ** 1.3) * 1.8)
             if impact_speed > 3.0:
@@ -244,7 +247,6 @@ class Formule:
                 self.engine_status = max(0.0, self.engine_status - impact_speed * 0.8)
 
     def pit_stop_repair(self):
-
         self.tire_status = min(100.0, self.tire_status + 1.2)
         self.brakes_status = min(100.0, self.brakes_status + 0.8)
         self.body_status = min(100.0, self.body_status + 0.5)
