@@ -4,19 +4,19 @@ import os
 import settings
 
 class Track:
-    def __init__(self, name, top_svg, bottom_svg, start_pos, start_angle, laps, reward):
+    def __init__(self, name, top_png, bottom_png, start_pos, start_angle, laps, reward):
         self.name = name
-        self.top_svg = top_svg
-        self.bottom_svg = bottom_svg
+        self.top_png = top_png
+        self.bottom_png = bottom_png
         self.start_pos = start_pos
         self.start_angle = start_angle
         self.laps = laps
         self.reward = reward
 
 TRACKS = [
-    Track("Standart Oval", "tracks/track1_top.svg", "tracks/track1_bottom.svg", (1150, 1275), 180, 3, 300),
-    Track("Short Sprint", "tracks/track2_top.svg", "tracks/track2_bottom.svg", (900, 925), 180, 5, 250),
-    Track("Grand Prix", "tracks/track3_top.svg", "tracks/track3_bottom.svg", (1560, 1650), 180, 2, 500)
+    Track("Standart Oval", "tracks/track1_top.png", "tracks/track1_bottom.png", (1150, 1275), 180, 3, 300),
+    Track("Short Sprint", "tracks/track2_top.png", "tracks/track2_bottom.png", (900, 925), 180, 5, 250),
+    Track("Grand Prix", "tracks/track3_top.png", "tracks/track3_bottom.png", (1560, 1650), 180, 2, 500)
 ]
 
 def get_start_pos(track_index):
@@ -24,12 +24,13 @@ def get_start_pos(track_index):
 
 def load_track_layers(track_index):
     t = TRACKS[track_index]
-    top_path = t.top_svg
-    bottom_path = t.bottom_svg
+    top_path = t.top_png
+    bottom_path = t.bottom_png
 
     if os.path.exists(top_path) and os.path.exists(bottom_path):
-        visual_map = pygame.image.load(top_path).convert()
-        logic_map = pygame.image.load(bottom_path).convert()
+        if os.path.exists(top_path) and os.path.exists(bottom_path):
+            visual_map = pygame.image.load(top_path).convert()
+            logic_map = pygame.image.load(bottom_path).convert()
     else:
         print(f" Files {top_path} or {bottom_path} do not exists, generating track.")
         map_w, map_h = 2400, 1600
