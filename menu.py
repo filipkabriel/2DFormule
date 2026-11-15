@@ -151,7 +151,7 @@ def draw_settings(mouse_pos):
     panel_rect = pygame.Rect(420, 220, 760, 390)
     pygame.draw.rect(settings.screen, (38, 42, 54), panel_rect, border_radius=14)
 
-    controls_labels = {"BOTH": "WSAD" + "ARROWS", "WSAD": "ONLY WSAD", "ARROWS" : "ONLY ARROWS"}
+    controls_labels = {"BOTH": "WASD" + "ARROWS", "WASD": "ONLY WASD", "ARROWS" : "ONLY ARROWS"}
     rows = [
         ("Controls", controls_labels[settings.control_scheme], btnToggleControls, 270),
         ("Minimap:", "ON" if settings.show_minimap else "OFF", btnToggleMinimap, 355),

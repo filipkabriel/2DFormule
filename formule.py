@@ -81,13 +81,13 @@ class Formule:
         acc = (self.transmission / 650.0) * ef_transmission * weight_factor * (0.7 + 0.3 * total_grip)
         brake_power = (self.brakes / 550.0) * ef_brakes * (0.6 + 0.4 * total_grip)
 
-        use_wsad = settings.control_scheme in ["BOTH", "WASD"]
-        use_arrows = settings.control_scheme in ["BOTH", "WASD"]
+        use_wasd = settings.control_scheme in ["BOTH", "WASD"]
+        use_arrows = settings.control_scheme in ["BOTH", "ARROWS"]
 
-        forward_input = (use_wsad and [pygame.K_w]) or (use_arrows and key[pygame.K_UP])
-        brake_input = (use_wsad and key[pygame.K_s]) or (use_arrows and key[pygame.K_DOWN])
-        left_input = (use_wsad and key[pygame.K_a]) or (use_arrows and key[pygame.K_LEFT])
-        right_input = (use_wsad and key[pygame.K_d]) or (use_arrows and key[pygame.K_RIGHT])
+        forward_input = (use_wasd and key[pygame.K_w]) or (use_arrows and key[pygame.K_UP])
+        brake_input = (use_wasd and key[pygame.K_s]) or (use_arrows and key[pygame.K_DOWN])
+        left_input = (use_wasd and key[pygame.K_a]) or (use_arrows and key[pygame.K_LEFT])
+        right_input = (use_wasd and key[pygame.K_d]) or (use_arrows and key[pygame.K_RIGHT])
 
         speed_ratio = abs(self.speed) / max(1.0, max_speed)
 
