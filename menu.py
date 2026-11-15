@@ -135,7 +135,6 @@ def draw_stats(player, mouse_pos):
     settings.screen.set_clip(None)
     settings.draw_button(buttonBackStats, "BACK", settings.fontButton, mouse_pos)
 
-
 def draw(player):
     global stats_scroll_y
     mouse_pos = pygame.mouse.get_pos()

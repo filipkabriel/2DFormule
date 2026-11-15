@@ -65,6 +65,12 @@ def run(player, track_index=0):
     font_hud = pygame.font.SysFont("Arial", 28, bold=True)
     font_big = pygame.font.SysFont("Arial", 64, bold=True)
 
+    map_w, map_h = visual_map.get_size()
+    minimap_scale = min(280/map_w, 200 / map_h)
+    minimap_w = int(map_w * minimap_scale)
+    minimap_h = int(map_h * minimap_scale)
+    minimap_img = pygame.transform.scale(visual_map, (minimap_w, minimap_h))
+
     cam_size = 900
     camera_view = pygame.Surface((cam_size, cam_size))
 
@@ -161,6 +167,7 @@ def run(player, track_index=0):
 
         car.render()
         hud(car, elapsed_time, last_lap_time, player.statistics.get_track(current_track.name)["best_lap"], current_lap, total_laps, font_hud, in_pit_zone)
+        draw_minimap(minimap_img, car, minimap_scale)
 
         if not race_started:
             draw_panel(settings.screen, font_big, "Press SPACE to start", (255, 255, 0))
@@ -229,3 +236,22 @@ def hud(formule, elapsed_time, last_lap_time, best_lap_time, current_lap, total_
     if in_pit_zone and not formule.dnf_status:
         pit_surf = font_hud.render("PIT ZONE: Stop and hold [R] to repair", True, (255, 255, 0))
         settings.screen.blit(pit_surf, (20, 390))
+def draw_minimap(minimap_img, formule, scale):
+    mini_w, mini_h = minimap_img.get_size()
+    pad = 15
+    pos_x = settings.width - mini_w - pad
+    pos_y = pad
+    bg_rect = pygame.Rect(pos_x -6 , pos_y - 6, mini_w + 12, mini_h + 12)
+    pygame.draw.rect(settings.screen, (0, 0, 0), bg_rect, border_radius=8)
+    pygame.draw.rect(settings.screen, (200, 200, 200), bg_rect, width = 2, border_radius=8)
+
+    settings.screen.blit(minimap_img, (pos_x, pos_y))
+
+    car_x = pos_x + int(formule.x * scale)
+    car_y = pos_y + int(formule.y * scale)
+
+    rad = math.radians(formule.angle)
+    dir_x = car_x + int(math.cos(rad) * 12)
+    dir_y = car_y + int(math.sin(rad) * 12)
+
+    pygame.draw.line(settings.screen, (255, 255, 255), (car_x, car_y), (dir_x, dir_y), 2)
