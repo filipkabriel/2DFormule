@@ -167,7 +167,8 @@ def run(player, track_index=0):
 
         car.render()
         hud(car, elapsed_time, last_lap_time, player.statistics.get_track(current_track.name)["best_lap"], current_lap, total_laps, font_hud, in_pit_zone)
-        draw_minimap(minimap_img, car, minimap_scale)
+        if settings.show_minimap:
+            draw_minimap(minimap_img, car, minimap_scale)
 
         if not race_started:
             draw_panel(settings.screen, font_big, "Press SPACE to start", (255, 255, 0))
@@ -203,8 +204,12 @@ def format_time(t):
     return f"{minutes:02d}:{seconds:02d}.{hundredths:02d}"
 
 def hud(formule, elapsed_time, last_lap_time, best_lap_time, current_lap, total_laps, font_hud, in_pit_zone):
-    kmh = int(abs(formule.speed) * 45)
-
+    if settings.speed_unit == "MPH":
+        speed_val = int(abs(formule.speed) * 45 * 0.621371)
+        speed_text = f"Speed: {speed_val} mph"
+    else:
+        speed_val = int(abs(formule.speed) * 45)
+        speed_text = f"Speed: {speed_val} km/h"
     hud_bg = pygame.Surface((350, 370), pygame.SRCALPHA)
     hud_bg.fill((0, 0, 0, 150))
     settings.screen.blit(hud_bg, (10, 10))
@@ -214,7 +219,7 @@ def hud(formule, elapsed_time, last_lap_time, best_lap_time, current_lap, total_
         (f"Time: {format_time(elapsed_time)}", (255, 255, 255)),
         (f"Last Lap: {format_time(last_lap_time)}", (200, 200, 200)),
         (f"Best Lap: {format_time(best_lap_time)}", (180, 130, 255)),
-        (f"Speed: {kmh} km/h", (200, 230, 255)),
+        (speed_text, (200, 230, 255)),
     ]
 
     tire_note = " (DEFECT!)" if formule.tire_status <= 5.0 else ""

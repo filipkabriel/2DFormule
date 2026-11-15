@@ -6,7 +6,8 @@ import settings
 buttonPlay = pygame.Rect(680, 280, 240, 60)
 buttonGarage = pygame.Rect(680, 370, 240, 60)
 buttonStats = pygame.Rect(680, 460, 240, 60)
-buttonEnd = pygame.Rect(680, 550, 240, 60)
+buttonSettings = pygame.Rect(680, 550, 240, 60)
+buttonEnd = pygame.Rect(680, 640, 240, 60)
 
 track_list_area = pygame.Rect(450, 230, 700, 490)
 buttonBackTrack = pygame.Rect(700, 760, 200, 60)
@@ -14,6 +15,12 @@ track_scroll_y = 0
 
 buttonBackStats = pygame.Rect(700, 760, 200, 60)
 stats_scroll_y = 0
+
+btnToggleControls = pygame.Rect(860, 260, 280, 55)
+btnToggleMinimap = pygame.Rect(860, 345, 280, 55)
+btnToggleUnits = pygame.Rect(860, 430, 280, 55)
+btnToggleFps = pygame.Rect(860, 515, 280, 55)
+buttonBackSettings = pygame.Rect(700, 760, 200, 60)
 
 
 def reset_car_for_race(car, track):
@@ -135,6 +142,28 @@ def draw_stats(player, mouse_pos):
     settings.screen.set_clip(None)
     settings.draw_button(buttonBackStats, "BACK", settings.fontButton, mouse_pos)
 
+def draw_settings(mouse_pos):
+    settings.screen.fill((22, 24, 32))
+
+    title_surf = settings.fontTitle.render("SETTINGS", True, settings.colour.White)
+    settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 110)))
+
+    panel_rect = pygame.Rect(420, 220, 760, 390)
+    pygame.draw.rect(settings.screen, (38, 42, 54), panel_rect, border_radius=14)
+
+    controls_labels = {"BOTH": "WSAD" + "ARROWS", "WSAD": "ONLY WSAD", "ARROWS" : "ONLY ARROWS"}
+    rows = [
+        ("Controls", controls_labels[settings.control_scheme], btnToggleControls, 270),
+        ("Minimap:", "ON" if settings.show_minimap else "OFF", btnToggleMinimap, 355),
+        ("speed Unit", settings.speed_unit, btnToggleUnits, 440),
+        ("FPS Limit", f"{settings.fps} FPS", btnToggleFps, 425),
+    ]
+
+    for label, btn_text, btn_rect, y_pos in rows:
+        lbl_surf = settings.fontButton.render(label, True, settings.colour.White)
+        settings.screen.blit(lbl_surf, (470, y_pos))
+        settings.draw_button(btn_rect, btn_text, settings.fontButton, mouse_pos)
+    settings.draw_button(buttonBackSettings, "BACK", settings.fontButton, mouse_pos)
 def draw(player):
     global stats_scroll_y
     mouse_pos = pygame.mouse.get_pos()
@@ -157,6 +186,8 @@ def draw(player):
                     settings.state = "GARAGE"
                 elif buttonStats.collidepoint(mouse_pos):
                     settings.state = "STATS"
+                elif buttonSettings.collidepoint(mouse_pos):
+                    settings.state = "SETTINGS"
                 elif buttonEnd.collidepoint(mouse_pos):
                     settings.menuStatus = False
 
@@ -169,7 +200,19 @@ def draw(player):
                             settings.selected_track = idx
                             settings.state = "PLAY"
                             break
-
+            elif settings.state == "SETTINGS":
+                if btnToggleControls.collidepoint(mouse_pos):
+                    order = ["BOTH", "WASD", "ARROWS"]
+                    idx = (order.index(settings.control_scheme) + 1) % len(order)
+                    settings.control_scheme = order[idx]
+                elif btnToggleMinimap.collidepoint(mouse_pos):
+                    settings.show_minimap = not settings.show_minimap
+                elif btnToggleUnits.collidepoint(mouse_pos):
+                    settings.speed_unit = "MPH" if settings.speed_unit == "KMH" else "KMH"
+                elif btnToggleFps.collidepoint(mouse_pos):
+                    settings.fps = 120 if settings.fps == 60 else 60
+                elif buttonBackSettings.collidepoint(mouse_pos):
+                    settings.state = "MENU"
             elif settings.state == "GARAGE":
                 garage.handle_click(player, mouse_pos)
 
@@ -178,7 +221,7 @@ def draw(player):
                     settings.state = "MENU"
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE and settings.state in ["GARAGE", "TRACK_SELECT", "STATS"]:
+            if event.key == pygame.K_ESCAPE and settings.state in ["GARAGE", "TRACK_SELECT", "STATS", "SETTINGS"]:
                 settings.state = "MENU"
 
     if settings.state == "MENU":
@@ -190,6 +233,7 @@ def draw(player):
         settings.draw_button(buttonPlay, "PLAY", settings.fontButton, mouse_pos)
         settings.draw_button(buttonGarage, "GARAGE", settings.fontButton, mouse_pos)
         settings.draw_button(buttonStats, "STATISTICS", settings.fontButton, mouse_pos)
+        settings.draw_button(buttonSettings, "SETTINGS", settings.fontButton, mouse_pos)
         settings.draw_button(buttonEnd, "QUIT", settings.fontButton, mouse_pos)
 
     elif settings.state == "TRACK_SELECT":
@@ -210,3 +254,5 @@ def draw(player):
 
     elif settings.state == "STATS":
         draw_stats(player, mouse_pos)
+    elif settings.state == "SETTINGS":
+        draw_settings(mouse_pos)

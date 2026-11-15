@@ -9,6 +9,10 @@ state = "MENU"
 selected_track = 0
 menuStatus = True
 save_file = "save.json"
+control_scheme = "BOTH"
+show_minimap = True
+speed_unit = "KMH"
+
 
 fontButton = pygame.font.SysFont("Arial", 36)
 fontTitle = pygame.font.SysFont("Arial", 80)
