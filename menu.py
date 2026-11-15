@@ -8,17 +8,17 @@ buttonGarage = pygame.Rect(680, 370, 240, 60)
 buttonStats = pygame.Rect(680, 460, 240, 60)
 buttonEnd = pygame.Rect(680, 550, 240, 60)
 
-buttonTrack1 = pygame.Rect(600, 280, 400, 60)
-buttonTrack2 = pygame.Rect(600, 380, 400, 60)
-buttonTrack3 = pygame.Rect(600, 480, 400, 60)
-buttonBackTrack = pygame.Rect(700, 620, 200, 60)
+track_list_area = pygame.Rect(450, 230, 700, 490)
+buttonBackTrack = pygame.Rect(700, 760, 200, 60)
+track_scroll_y = 0
 
 buttonBackStats = pygame.Rect(700, 760, 200, 60)
 stats_scroll_y = 0
 
-def reset_car_for_race(car, start_pos):
-    car.x, car.y = start_pos
-    car.angle = 180
+
+def reset_car_for_race(car, track):
+    car.x, car.y = track.start_pos
+    car.angle = track.start_angle
     car.speed = 0
     car.vx = 0
     car.vy = 0
@@ -30,6 +30,56 @@ def reset_car_for_race(car, start_pos):
     car.steering_status = 100
     car.tire_status = 100
     car.brakes_status = 100
+
+
+def format_laps(laps):
+    if laps == 1:
+        return "1 kolo"
+    elif 2 <= laps <= 4:
+        return f"{laps} kola"
+    return f"{laps} kol"
+
+
+def update_track_scroll(delta_y=0):
+    global track_scroll_y
+    row_step = 85
+    content_height = len(game.TRACKS) * row_step + 20
+    min_scroll = min(0, track_list_area.height - content_height)
+    track_scroll_y = max(min_scroll, min(0, track_scroll_y + delta_y))
+
+
+def get_track_buttons():
+    buttons = []
+    row_step = 85
+    for idx, track in enumerate(game.TRACKS):
+        btn_y = track_list_area.y + 15 + idx * row_step + track_scroll_y
+        rect = pygame.Rect(
+            track_list_area.x + 30,
+            btn_y,
+            track_list_area.width - 60,
+            65
+        )
+        label = f"{idx + 1}. {track.name} ({format_laps(track.laps)} | {track.reward}$)"
+        buttons.append((idx, rect, label))
+    return buttons
+
+
+def draw_track_select(mouse_pos):
+    settings.screen.fill((20, 30, 20))
+
+    title_surf = settings.fontTitle.render("SELECT TRACK", True, settings.colour.White)
+    settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 140)))
+
+    update_track_scroll(0)
+    settings.screen.set_clip(track_list_area)
+
+    for _, rect, label in get_track_buttons():
+        if rect.bottom >= track_list_area.top and rect.top <= track_list_area.bottom:
+            settings.draw_button(rect, label, settings.fontButton, mouse_pos)
+
+    settings.screen.set_clip(None)
+    settings.draw_button(buttonBackTrack, "BACK", settings.fontButton, mouse_pos)
+
 
 def draw_stats(player, mouse_pos):
     global stats_scroll_y
@@ -83,18 +133,22 @@ def draw_stats(player, mouse_pos):
         settings.screen.blit(times_surf, (card_rect.x + 20, card_rect.y + 52))
 
     settings.screen.set_clip(None)
-
     settings.draw_button(buttonBackStats, "BACK", settings.fontButton, mouse_pos)
 
+
 def draw(player):
+    global stats_scroll_y
     mouse_pos = pygame.mouse.get_pos()
-    stats_scroll_y = 0
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             settings.menuStatus = False
 
-        if event.type == pygame.MOUSEWHEEL and settings.state == "STATS":
-            stats_scroll_y += event.y * 35
+        if event.type == pygame.MOUSEWHEEL:
+            if settings.state == "STATS":
+                stats_scroll_y += event.y * 35
+            elif settings.state == "TRACK_SELECT":
+                update_track_scroll(event.y * 35)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if settings.state == "MENU":
@@ -108,17 +162,14 @@ def draw(player):
                     settings.menuStatus = False
 
             elif settings.state == "TRACK_SELECT":
-                if buttonTrack1.collidepoint(mouse_pos):
-                    settings.selected_track = 0
-                    settings.state = "PLAY"
-                elif buttonTrack2.collidepoint(mouse_pos):
-                    settings.selected_track = 1
-                    settings.state = "PLAY"
-                elif buttonTrack3.collidepoint(mouse_pos):
-                    settings.selected_track = 2
-                    settings.state = "PLAY"
-                elif buttonBackTrack.collidepoint(mouse_pos):
+                if buttonBackTrack.collidepoint(mouse_pos):
                     settings.state = "MENU"
+                elif track_list_area.collidepoint(mouse_pos):
+                    for idx, rect, _ in get_track_buttons():
+                        if rect.collidepoint(mouse_pos):
+                            settings.selected_track = idx
+                            settings.state = "PLAY"
+                            break
 
             elif settings.state == "GARAGE":
                 garage.handle_click(player, mouse_pos)
@@ -143,19 +194,11 @@ def draw(player):
         settings.draw_button(buttonEnd, "QUIT", settings.fontButton, mouse_pos)
 
     elif settings.state == "TRACK_SELECT":
-        settings.screen.fill((20, 30, 20))
-
-        title_surf = settings.fontTitle.render("SELECT TRACK", True, settings.colour.White)
-        settings.screen.blit(title_surf, title_surf.get_rect(center=(settings.width // 2, 150)))
-
-        settings.draw_button(buttonTrack1, "1. Standard Oval (3 kola)", settings.fontButton, mouse_pos)
-        settings.draw_button(buttonTrack2, "2. Short Sprint (5 kol)", settings.fontButton, mouse_pos)
-        settings.draw_button(buttonTrack3, "3. Grand Prix (2 kola)", settings.fontButton, mouse_pos)
-        settings.draw_button(buttonBackTrack, "BACK", settings.fontButton, mouse_pos)
+        draw_track_select(mouse_pos)
 
     elif settings.state == "PLAY":
-        start_pos = game.get_start_pos(settings.selected_track)
-        reset_car_for_race(player.formule_list[player.formule_index], start_pos)
+        selected = game.TRACKS[settings.selected_track]
+        reset_car_for_race(player.formule_list[player.formule_index], selected)
         next_state, reward = game.run(player, settings.selected_track)
         player.coins += reward
         if next_state == "QUIT":
