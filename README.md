@@ -9,6 +9,7 @@ A 2D top-down racing game built with Python and Pygame[cite: 1, 2]. Take control
 * **Garage & Upgrades:** Win races to earn coins and spend them in the garage to upgrade your Engine, Transmission, Steering, and Brakes, or switch between Soft, Medium, and Hard tire compounds.
 * **Automatic Save System:** Your coins and car upgrades are automatically saved to `save.json` upon exiting the game.
 * **Dual-Layer SVG Tracks:** Uses separate visual and collision `.svg` layers for accurate off-track grass slowdown, wall impacts, and checkpoint validation.
+* **Power Ups** Power ups are spawning random on track and player who picks it up gains NITRO or SHIELD, ... for temporary time
 
 ## Controls
 
