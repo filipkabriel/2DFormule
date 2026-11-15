@@ -156,7 +156,7 @@ def draw_settings(mouse_pos):
         ("Controls", controls_labels[settings.control_scheme], btnToggleControls, 270),
         ("Minimap:", "ON" if settings.show_minimap else "OFF", btnToggleMinimap, 355),
         ("speed Unit", settings.speed_unit, btnToggleUnits, 440),
-        ("FPS Limit", f"{settings.fps} FPS", btnToggleFps, 425),
+        ("FPS Limit", f"{settings.fps} FPS", btnToggleFps, 525),
     ]
 
     for label, btn_text, btn_rect, y_pos in rows:
