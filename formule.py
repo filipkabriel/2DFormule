@@ -38,6 +38,8 @@ class Formule:
         self.on_grass = False
         self.distance = 0.0
         self.slip_intensity = 0.0
+        self.active_powerup = None
+        self.powerup_timer = 0.0
 
     def get_tire_modifiers(self):
         if self.tires == "soft":
@@ -71,15 +73,23 @@ class Formule:
 
         tire_grip, tire_wear_mult = self.get_tire_modifiers()
         total_grip = tire_grip * ef_tires
-        if self.on_grass:
+        if self.on_grass and self.active_powerup != "SHIELD":
             total_grip *= 0.50
+
+        bonus_stat = 40 if self.active_powerup == "UPGRADE" else 0
+        if self.active_powerup == "UPGRADE":
+            total_grip *= 1.20
 
         weight_factor = 700.0 / max(400.0, self.weight)
 
         puncture_penalty = 0.55 if self.tire_status <= 5.0 else 1.0
-        max_speed = (self.engine / 4.5) * ef_engine * ef_aero * puncture_penalty
-        acc = (self.transmission / 650.0) * ef_transmission * weight_factor * (0.7 + 0.3 * total_grip)
-        brake_power = (self.brakes / 550.0) * ef_brakes * (0.6 + 0.4 * total_grip)
+        max_speed = ((self.engine + bonus_stat) / 4.5) * ef_engine * ef_aero * puncture_penalty
+        acc = ((self.transmission + bonus_stat) / 650.0) * ef_transmission * weight_factor * (0.7 + 0.3 * total_grip)
+        brake_power = ((self.brakes + bonus_stat) / 550.0) * ef_brakes * (0.6 + 0.4 * total_grip)
+
+        if self.active_powerup == "NITRO":
+            max_speed *= 1.25
+            acc *= 1.55
 
         use_wasd = settings.control_scheme in ["BOTH", "WASD"]
         use_arrows = settings.control_scheme in ["BOTH", "ARROWS"]
@@ -147,7 +157,7 @@ class Formule:
             low_speed_factor = min(1.0, abs(self.speed) / 2.2)
             high_speed_understeer = max(0.55, 1.0 - (abs(self.speed) / (max_speed * 2.1)))
 
-            max_turn_rate = (self.steering / 22.0) * ef_steering * total_grip * low_speed_factor * high_speed_understeer
+            max_turn_rate = ((self.steering + bonus_stat) / 22.0) * ef_steering * total_grip * low_speed_factor * high_speed_understeer
             target_ang_vel = steer_input * max_turn_rate * ride_dir
 
             alignment_pull = 0.0
@@ -242,6 +252,8 @@ class Formule:
         return detected_colour
 
     def apply_crash_damage(self, impact_speed):
+        if self.active_powerup == "SHIELD":
+            return
         if impact_speed > 0.8:
             self.body_status = max(0.0, self.body_status - (impact_speed ** 1.4) * 2.2)
             self.steering_status = max(0.0, self.steering_status - (impact_speed ** 1.3) * 1.8)
@@ -256,6 +268,23 @@ class Formule:
         self.steering_status = min(100.0, self.steering_status + 0.6)
         self.engine_status = min(100.0, self.engine_status + 0.3)
         self.transmission_status = min(100.0, self.transmission_status + 0.3)
+
+    def apply_powerup(self, pu_type, duration):
+        self.active_powup = pu_type
+        self.powerup_timer = duration
+        if pu_type == "REPAIR":
+            self.tire_status = min(100.0, self.tire_status + 25.0)
+            self.brakes_status = min(100.0, self.brakes_status + 25.0)
+            self.body_status = min(100.0, self.body_status + 25.0)
+            self.steering_status = min(100.0, self.steering_status + 25.0)
+            self.engine_status = min(100.0, self.engine_status + 25.0)
+            self.transmission_status = min(100.0, self.transmission_status + 25.0)
+
+    def update_powerup(self, dt):
+        if self.powerup_timer > 0:
+            self.powerup_timer = max(0.0, self.powerup_timer - dt)
+            if self.powerup_timer == 0.0:
+                self.active_powerup = None
 
     def render(self):
         shape = pygame.Surface((20, 40), pygame.SRCALPHA)

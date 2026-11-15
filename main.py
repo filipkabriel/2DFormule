@@ -10,6 +10,5 @@ while settings.menuStatus:
     menu.draw(hrac)
     pygame.display.flip()
     settings.time.tick(settings.fps)
-
 hrac.save()
 pygame.quit()

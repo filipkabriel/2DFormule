@@ -37,6 +37,8 @@ def reset_car_for_race(car, track):
     car.steering_status = 100
     car.tire_status = 100
     car.brakes_status = 100
+    car.active_powerup = None
+    car.powerup_timer = 0.0
 
 
 def format_laps(laps):

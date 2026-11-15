@@ -2,6 +2,7 @@
 import math
 import os
 import settings
+import random
 
 class Track:
     def __init__(self, name, top_png, bottom_png, start_pos, start_angle, laps, reward):
@@ -19,6 +20,46 @@ TRACKS = [
     Track("Grand Prix", "tracks/track3_top.png", "tracks/track3_bottom.png", (1560, 1650), 180, 2, 500)
 ]
 
+class PowerUp:
+    def __init__(self, x, y, pu_type, label, duration, colour):
+        self.x = x
+        self.y = y
+        self.pu_type = pu_type
+        self.label = label
+        self.duration = duration
+        self.colour = colour
+
+    def draw(self, surface, offset_x, offset_y, font):
+        sx = int(self.x + offset_x)
+        sy = int(self.y + offset_y)
+        pulse = int(math.sin(pygame.time.get_ticks() * 0.008) * 2)
+        radius = 14 + pulse
+
+        pygame.draw.circle(surface, (255, 255, 255), (sx, sy), radius + 2)
+        pygame.draw.circle(surface, self.colour, (sx, sy), radius)
+
+        letter = font.render(self.pu_type[0], True, (0, 0, 0))
+        surface.blit(letter, letter.get_rect(center=(sx, sy)))
+
+def spawn_powerup(logic_map, start_pos):
+    map_w, map_h = logic_map.get_size()
+    for _ in range(120):
+        rx = random.randint(60, map_w-60)
+        ry = random.randint(60, map_h-60)
+        if math.hypot(rx - start_pos[0], ry - start_pos[1]) < 200:
+            continue
+        col = logic_map.get_at((rx, ry))[:3]
+        if col not in [(0,153,0), (255, 0, 0)]:
+            cfg = random.choice(POWERUP_TYPES)
+            return PowerUp(rx, ry, cfg["type"], cfg["label"], cfg["duration"], cfg["colour"])
+    return None
+
+POWERUP_TYPES = [
+    {"type": "NITRO", "label": "NITRO BOOST", "duration": 4.0, "colour": (255, 165, 0)},
+    {"type": "UPGRADE", "label": "SUPER UPGRADE", "duration": 7.0, "colour": (0, 220, 255)},
+    {"type": "REPAIR", "label": "REPAIR + SHIELD", "duration": 5.5, "colour": (50, 255, 120)},
+    {"type": "EMP", "label": "EMP DESTROYER", "duration": 3.0, "colour": (255, 50, 180)}
+]
 def get_start_pos(track_index):
     return TRACKS[track_index].start_pos
 
@@ -92,6 +133,13 @@ def run(player, track_index=0):
 
     show_logic_map = False
 
+    font_pu = pygame.font.SysFont("Arial", 16, bold=True)
+    powerups = []
+    pu_spawn_timer = 0.0
+    active_pu_label = ""
+    active_pu_colour = (255, 255, 255)
+    ai_cars = []
+
     gameStatus = True
     while gameStatus:
         for event in pygame.event.get():
@@ -124,6 +172,30 @@ def run(player, track_index=0):
             key = pygame.key.get_pressed()
             car.control(key)
             under_car_colour = car.move(logic_map)
+
+            dt = 1.0 / settings.fps
+            car.update_powerup(dt)
+
+            pu_spawn_timer += dt
+            if pu_spawn_timer > 4.0 and len(powerups) < 5:
+                pu_spawn_timer = 0.0
+                new_pu = spawn_powerup(logic_map, current_track.start_pos)
+                if new_pu:
+                    powerups.append(new_pu)
+
+            for pu in powerups[:]:
+                if math.hypot(car.x - pu.x, car.y - pu.y) < 32:
+                    pu_type = "SHIELD" if pu.pu_type == "REPAIR" else pu.pu_type
+                    if pu.pu_type == "REPAIR":
+                        car.apply_powerup("REPAIR", pu.duration)
+                    car.apply_powerup(pu.pu_type, pu.duration)
+                    active_pu_label = pu.label
+                    active_pu_colour = pu.colour
+                    powerups.remove(pu)
+            if car.active_powerup == "EMP":
+                for enemy in ai_cars:
+                    if not enemy.dnf_status and math.hypot(enemy.x - car.x, enemy.y - car.y) < 350:
+                        enemy.dnf_status = True
 
             if in_pit_zone and abs(car.speed) < 0.5 and key[pygame.K_r] and not car.dnf_status:
                 car.pit_stop_repair()
@@ -159,6 +231,13 @@ def run(player, track_index=0):
         active_map = logic_map if show_logic_map else visual_map
         camera_view.blit(active_map, (offset_x, offset_y))
 
+        for pu in powerups:
+            pu.draw(camera_view, offset_x, offset_y, font_pu)
+
+        if car.active_powerup == "EMP":
+            wave_radius = int((pygame.time.get_ticks() % 600) * 0.55)
+            pygame.draw.circle(camera_view, (255, 50, 180), (cam_size // 2, cam_size // 2), wave_radius, 3)
+
         zoomed_view = pygame.transform.scale(camera_view, (cam_size * 2, cam_size * 2))
         rotated_world = pygame.transform.rotate(zoomed_view, car.angle + 90)
 
@@ -167,6 +246,13 @@ def run(player, track_index=0):
 
         car.render()
         hud(car, elapsed_time, last_lap_time, player.statistics.get_track(current_track.name)["best_lap"], current_lap, total_laps, font_hud, in_pit_zone)
+
+        if car.active_powerup and car.active_timer > 0:
+            pu_surf = font_hud.render(f"POWER-UP: {active_pu_label} ({car.powerup_timer:.1f}s)", True, active_pu_colour)
+            pu_rect = pu_surf.get_rect(center=(settings.width // 2, 45))
+            pygame.draw.rect(settings.screen, (0, 0, 0), pu_rect.inflate(24, 12), border_radius =8)
+            settings.screen.blit(pu_surf, pu_rect)
+
         if settings.show_minimap:
             draw_minimap(minimap_img, car, minimap_scale)
 
